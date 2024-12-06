@@ -1,0 +1,85 @@
+:root {
+    --font-league: 'League Spartan', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+    --font-quicksand: 'Quicksand', sans-serif;
+    --font-engagement: 'Engagement', cursive;
+
+    --color-cobalt-900: #1B4A9B;
+    --color-cobalt-700: #0056FF;
+    --color-black-rock-950: #0D022C;
+    --color-black: #000000;
+    --color-loblolly-950: #31333A;
+    --color-loblolly-700: #1F1F1F;
+    --color-loblolly-800: #5C5C5C;
+    --color-white-50: #FFFFFF;
+    --color-white-sand-50: #F5F5F5;
+    --color-mine-shaft-100: #E7E7E7;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan&family=Poppins&family=Quicksand&family=Engagement&display=swap');
+
+body {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.logout-button i {
+  font-size: 1rem;
+}
+
+/* Estilos para el navbar */
+.nav-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem;
+}
+
+.user-name-box {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  color: var(--color-cobalt-900);
+  font-family: var(--font-league);
+}
+
+.user-name-box i {
+  margin-right: 0.5rem;
+  color: var(--color-cobalt-900);
+}
+  
