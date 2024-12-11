@@ -1,6 +1,6 @@
 <template>
   <div class="nav-bar">
-    <h2>Bienvenido a la plataforma de IGH</h2>
+    <MyTitle @click="navigateTo('/')">InteGrowHome</MyTitle>
     
     <!-- Mostrar botones de auth o información del usuario -->
     <div v-if="!currentUser" class="auth-buttons">
@@ -18,6 +18,12 @@
         <i class="fas fa-user"></i> 
         Bienvenido, {{ currentUser.first_name }} {{ currentUser.last_name }}
       </span>
+      <button v-if="currentUser.role === 'admin'" @click="navigateTo('/admin-home')" class="admin-button">
+        <i class="fas fa-user-shield"></i> Panel de Administración
+      </button>
+      <button @click="navigateTo('/')" class="home-button">
+        <i class="fas fa-home"></i> Inicio
+      </button>
       <button @click="handleLogout" class="logout-button">
         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
       </button>
@@ -46,19 +52,23 @@
   >
     <AgentRegistrationForm @cerrar="showRegisterPopup = false" />
   </MyPopUp>
+
+  <router-view></router-view>
 </template>
 
 <script>
 import MyPopUp from '@/components/molecules/MyPopUp.vue';
 import AgentRegistrationForm from '@/components/organisms/sesion/AgentRegistrationForm.vue';
 import LoginForm from '@/components/organisms/sesion/LoginForm.vue';
+import MyTitle from '@/components/atoms/MyTitle.vue';
 
 export default {
   name: 'App',
   components: {
     MyPopUp,
     AgentRegistrationForm,
-    LoginForm
+    LoginForm,
+    MyTitle
   },
   data() {
     return {
@@ -68,9 +78,9 @@ export default {
     };
   },
   methods: {
-    handleLoginSuccess(user) {
-      this.currentUser = user;
-      console.log('Usuario logueado:', user);
+    handleLoginSuccess({ user, role }) {
+      this.currentUser = { ...user, role };
+      console.log('Usuario logueado:', this.currentUser);
     },
     handleLogout() {
       // Limpiar datos de sesión
@@ -84,6 +94,9 @@ export default {
       if (token && user) {
         this.currentUser = JSON.parse(user);
       }
+    },
+    navigateTo(path) {
+      this.$router.push(path); // Navegar a la nueva ruta
     }
   },
   mounted() {
@@ -94,65 +107,5 @@ export default {
 </script>
 
 <style>
-.nav-bar {
-  padding: 1rem;
-  background-color: var(--color-white-sand-50);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.auth-buttons, .user-info {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.welcome-text {
-  font-family: var(--font-league);
-  color: var(--color-cobalt-900);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.login-button, .register-button, .logout-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-league);
-  transition: background-color 0.3s ease;
-}
-
-.login-button {
-  background-color: var(--color-cobalt-900);
-  color: var(--color-white-50);
-}
-
-.login-button:hover {
-  background-color: var(--color-cobalt-700);
-}
-
-.register-button {
-  background-color: var(--color-loblolly-700);
-  color: var(--color-white-50);
-}
-
-.register-button:hover {
-  background-color: var(--color-loblolly-800);
-}
-
-.logout-button {
-  background-color: var(--color-loblolly-700);
-  color: var(--color-white-50);
-}
-
-.logout-button:hover {
-  background-color: var(--color-loblolly-800);
-}
+/* No es necesario agregar estilos aquí si ya están en styles.css */
 </style>

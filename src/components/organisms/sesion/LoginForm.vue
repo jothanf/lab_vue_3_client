@@ -103,11 +103,12 @@ export default {
         if (response.data.token) {
           localStorage.setItem('token', `Bearer ${response.data.token}`);
           localStorage.setItem('user', JSON.stringify(response.data.user));
+          localStorage.setItem('role', response.data.role);
           
           this.showSuccess('¡Inicio de sesión exitoso!');
           
           // Emitir evento de login exitoso
-          this.$emit('login-success', response.data.user);
+          this.$emit('login-success', { user: response.data.user, role: response.data.role });
           
           setTimeout(() => {
             this.$emit('cerrar');
