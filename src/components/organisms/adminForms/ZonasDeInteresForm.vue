@@ -1,0 +1,205 @@
+<template>
+  <div class="zonas-de-interes-form">
+    <h2>Crear Zona de Interés</h2>
+    
+    <!-- Notificaciones -->
+    <div v-if="notification" :class="['alert', `alert-${notification.type}`]">
+      {{ notification.message }}
+    </div>
+
+    <form @submit.prevent="submitForm">
+      <div class="form-group">
+        <label for="nombre">Nombre*:</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          v-model="formData.nombre" 
+          required 
+          class="form-control"
+          maxlength="100"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="categoria">Categoría*:</label>
+        <select 
+          id="categoria" 
+          v-model="formData.categoria" 
+          required 
+          class="form-control"
+        >
+          <option value="">Seleccione una categoría</option>
+          <option value="parque">Parque</option>
+          <option value="museo">Museo</option>
+          <option value="restaurante">Restaurante</option>
+          <option value="monumento">Monumento</option>
+          <option value="plaza">Plaza</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción:</label>
+        <textarea 
+          id="descripcion" 
+          v-model="formData.descripcion" 
+          class="form-control" 
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="ubicacion">Ubicación (Longitud y Latitud):</label>
+        <div class="d-flex">
+          <input 
+            type="number" 
+            placeholder="Longitud" 
+            v-model="formData.ubicacion.longitud" 
+            class="form-control" 
+            required 
+          />
+          <input 
+            type="number" 
+            placeholder="Latitud" 
+            v-model="formData.ubicacion.latitud" 
+            class="form-control" 
+            required 
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Guardar Zona de Interés</button>
+    </form>
+  </div>
+</template>
+
+<script>
+import axios from '@/utils/axios';
+
+export default {
+  name: 'ZonasDeInteresForm',
+  data() {
+    return {
+      formData: {
+        nombre: '',
+        categoria: '',
+        descripcion: '',
+        ubicacion: {
+          longitud: null,
+          latitud: null,
+        },
+      },
+      notification: null
+    }
+  },
+  methods: {
+    showNotification(message) {
+      alert(message);
+    },
+
+    async submitForm() {
+      try {
+        // Validaciones básicas
+        if (!this.formData.nombre || !this.formData.categoria) {
+          alert('Por favor complete los campos obligatorios');
+          return;
+        }
+
+        const response = await axios.post('/crm/zonasDeInteres/', this.formData);
+        
+        // Mostrar alert de éxito y esperar confirmación
+        alert('Zona de interés creada exitosamente');
+        
+        // Emitir eventos después de que el usuario confirme
+        this.$emit('zona-de-interes-created', response.data);
+        this.$emit('submit-success', response.data);
+        
+        // Limpiar el formulario
+        this.resetForm();
+
+      } catch (error) {
+        console.error('Error al crear zona de interés:', error);
+        let errorMessage = 'Error al guardar la zona de interés';
+        
+        if (error.response?.data) {
+          errorMessage = typeof error.response.data === 'object'
+            ? Object.values(error.response.data).join('\n')
+            : error.response.data;
+        }
+        
+        // Mostrar alert de error
+        alert(errorMessage);
+      }
+    },
+
+    resetForm() {
+      this.formData = {
+        nombre: '',
+        categoria: '',
+        descripcion: '',
+        ubicacion: {
+          longitud: null,
+          latitud: null,
+        },
+      };
+    }
+  }
+}
+</script>
+
+<style scoped>
+.zonas-de-interes-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+.alert {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+}
+
+.alert-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.alert-warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+</style>

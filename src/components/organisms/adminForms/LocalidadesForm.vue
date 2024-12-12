@@ -1,6 +1,6 @@
 <template>
-  <div class="amenidades-form">
-    <h2>Crear Amenidad</h2>
+  <div class="localidades-form">
+    <h2>Crear Localidad</h2>
     
     <!-- Notificaciones -->
     <div v-if="notification" :class="['alert', `alert-${notification.type}`]">
@@ -21,20 +21,15 @@
       </div>
 
       <div class="form-group">
-        <label for="categoria">Categoría*:</label>
-        <select 
-          id="categoria" 
-          v-model="formData.categoria" 
-          required 
+        <label for="sigla">Sigla:</label>
+        <input 
+          type="text" 
+          id="sigla" 
+          v-model="formData.sigla" 
           class="form-control"
+          maxlength="10"
+          @input="toUpperCase('sigla')"
         >
-          <option value="">Seleccione una categoría</option>
-          <option value="recreacion">Recreación</option>
-          <option value="deportes">Deportes</option>
-          <option value="social">Social</option>
-          <option value="servicios">Servicios</option>
-          <option value="bienestar">Bienestar</option>
-        </select>
       </div>
 
       <div class="form-group">
@@ -47,7 +42,7 @@
         ></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-submit">Guardar Amenidad</button>
+      <button type="submit" class="btn btn-primary btn-submit">Guardar Localidad</button>
     </form>
   </div>
 </template>
@@ -56,51 +51,49 @@
 import axios from '@/utils/axios';
 
 export default {
-  name: 'AmenidadesForm',
+  name: 'LocalidadesForm',
   data() {
     return {
       formData: {
         nombre: '',
-        categoria: '',
+        sigla: '',
         descripcion: '',
       },
       notification: null
     }
   },
   methods: {
-    showNotification(message, type = 'success') {
-      this.notification = {
-        message,
-        type
-      };
-      setTimeout(() => {
-        this.notification = null;
-      }, 5000);
+    showNotification(message) {
+      alert(message); // Usar alert para mostrar la notificación
+    },
+
+    toUpperCase(field) {
+      this.formData[field] = this.formData[field].toUpperCase();
     },
 
     async submitForm() {
       try {
         // Validaciones básicas
-        if (!this.formData.nombre || !this.formData.categoria) {
-          this.showNotification('Por favor complete los campos obligatorios', 'warning');
+        if (!this.formData.nombre) {
+          this.showNotification('Por favor complete el campo obligatorio');
           return;
         }
 
         // Enviar datos al backend usando la ruta correcta
-        const response = await axios.post('/crm/amenidades/', this.formData);
+        const response = await axios.post('http://localhost:8000/crm/localidades/', this.formData);
         
-        console.log('Respuesta del servidor:', response.data);
-        this.showNotification('Amenidad creada exitosamente');
+        // Mostrar alert de éxito
+        this.showNotification('Localidad creada exitosamente');
         
         // Limpiar el formulario
         this.resetForm();
         
-        // Emitir evento para actualizar la lista de amenidades si es necesario
-        this.$emit('amenidad-created', response.data);
+        // Emitir evento para actualizar la lista de localidades si es necesario
+        this.$emit('localidad-created', response.data);
 
       } catch (error) {
-        console.error('Error al crear amenidad:', error);
-        let errorMessage = 'Error al guardar la amenidad';
+        console.error('Error al crear localidad:', error);
+        let errorMessage = 'Error al guardar la localidad';
         
         if (error.response?.data) {
           errorMessage = typeof error.response.data === 'object'
@@ -108,14 +101,15 @@ export default {
             : error.response.data;
         }
         
-        this.showNotification(errorMessage, 'danger');
+        // Mostrar alert de error
+        this.showNotification(errorMessage);
       }
     },
 
     resetForm() {
       this.formData = {
         nombre: '',
-        categoria: '',
+        sigla: '',
         descripcion: '',
       };
     }
@@ -124,7 +118,7 @@ export default {
 </script>
 
 <style scoped>
-.amenidades-form {
+.localidades-form {
   max-width: 600px;
   margin: 0 auto;
   padding: var(--spacing-lg);
@@ -134,6 +128,4 @@ export default {
   width: 100%;
   margin-top: var(--spacing-md);
 }
-
-
 </style>

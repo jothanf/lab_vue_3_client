@@ -1,5 +1,9 @@
 import axios from 'axios';
 
+// Definir la URL base para todas las peticiones
+const baseURL = 'http://localhost:8000';
+axios.defaults.baseURL = baseURL;
+
 // Interceptor para añadir el token a todas las solicitudes
 axios.interceptors.request.use(
   config => {

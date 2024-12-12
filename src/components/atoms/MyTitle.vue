@@ -21,7 +21,6 @@ export default {
 .title {
   font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 1.5rem;
   text-align: center;
   font-family: 'Engagement', cursive;
   transition: transform 0.3s;

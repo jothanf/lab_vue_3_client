@@ -4,10 +4,10 @@
     
     <!-- Mostrar botones de auth o información del usuario -->
     <div v-if="!currentUser" class="auth-buttons">
-      <button @click="showLoginPopup = true" class="login-button">
+      <button @click="showLoginPopup = true" class="btn btn-primary">
         <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
       </button>
-      <button @click="showRegisterPopup = true" class="register-button">
+      <button @click="showRegisterPopup = true" class="btn btn-primary">
         <i class="fas fa-user-plus"></i> Registrar Agente
       </button>
     </div>
@@ -18,13 +18,10 @@
         <i class="fas fa-user"></i> 
         Bienvenido, {{ currentUser.first_name }} {{ currentUser.last_name }}
       </span>
-      <button v-if="currentUser.role === 'admin'" @click="navigateTo('/admin-home')" class="admin-button">
+      <button v-if="currentUser.role === 'admin'" @click="navigateTo('/admin-home')" class="btn btn-primary">
         <i class="fas fa-user-shield"></i> Panel de Administración
       </button>
-      <button @click="navigateTo('/')" class="home-button">
-        <i class="fas fa-home"></i> Inicio
-      </button>
-      <button @click="handleLogout" class="logout-button">
+      <button @click="handleLogout" class="btn btn-secondary">
         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
       </button>
     </div>
@@ -91,8 +88,9 @@ export default {
     checkAuthStatus() {
       const token = localStorage.getItem('token');
       const user = localStorage.getItem('user');
+      const role = localStorage.getItem('role');
       if (token && user) {
-        this.currentUser = JSON.parse(user);
+        this.currentUser = { ...JSON.parse(user), role };
       }
     },
     navigateTo(path) {
@@ -106,6 +104,19 @@ export default {
 }
 </script>
 
-<style>
-/* No es necesario agregar estilos aquí si ya están en styles.css */
+<style scoped>
+  .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .welcome-text {
+    font-family: var(--font-poppins); /* Cambiar a la fuente deseada */
+    font-weight: 600;
+    color: var(--color-primary); /* Cambiar al color deseado */
+    display: flex; /* Usar flexbox para centrar */
+    align-items: center; /* Centrar verticalmente */
+
+  }
 </style>
