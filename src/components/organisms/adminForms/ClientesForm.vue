@@ -162,7 +162,7 @@ export default {
 
                 console.log("Datos a enviar:", clientData);
 
-                const response = await axios.post('/accounts/clientes/', clientData);
+                const response = await axios.post('/accounts/cliente/', clientData);
                 console.log("Respuesta exitosa:", response.data);
                 
                 this.showSuccess(`¡Registro exitoso! El cliente ${this.form.nombre} ${this.form.apellidos} ha sido registrado.`);
