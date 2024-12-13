@@ -21,6 +21,7 @@
       <button v-if="currentUser.role === 'admin'" @click="navigateTo('/admin-home')" class="btn btn-primary">
         <i class="fas fa-user-shield"></i> Panel de Administración
       </button>
+      
       <button @click="handleLogout" class="btn btn-secondary">
         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
       </button>

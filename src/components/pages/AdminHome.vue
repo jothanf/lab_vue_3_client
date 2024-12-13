@@ -31,12 +31,19 @@
       </div>
       <h3>Business  </h3>
       <div class="buttons-container">
-        <button @click="showClientesForm = true" class="btn btn-primary">
-          Crear Cliente
-        </button>
-        <button @click="showPropiedadForm = true" class="btn btn-primary">
-          Crear Propiedad
-        </button>
+        <div class="buttons-sub-container">
+          <button @click="showClientesForm = true" class="btn btn-primary">
+            Crear Cliente
+          </button>
+          <button @click="showClientesList = true" class="btn btn-primary">
+            Ver Clientes
+          </button>
+        </div>
+        <div class="buttons-sub-container">
+          <button @click="showPropiedadForm = true" class="btn btn-primary">
+            Crear Propiedad
+          </button>
+        </div>
       </div>
 
       <!-- MyPopUp para mostrar el formulario de amenidades -->
@@ -79,10 +86,16 @@
         <ClientesForm @cliente-created="handleClienteCreated" />
       </MyPopUp>
 
+      <!-- MyPopUp para mostrar el listado de clientes -->
+      <MyPopUp :visible="showClientesList" @cerrar="showClientesList = false" titulo="Ver Clientes">
+        <ClientesList @cliente-list="handleClienteList" />
+      </MyPopUp>
+
       <!-- MyPopUp para mostrar el formulario de propiedades -->
       <MyPopUp :visible="showPropiedadForm" @cerrar="showPropiedadForm = false" titulo="Crear Propiedad">
         <PropiedadForm @propiedad-created="handlePropiedadCreated" />
       </MyPopUp>
+
     </div>
   </div>
 </template>
@@ -98,6 +111,7 @@ import BarriosForm from '@/components/organisms/adminForms/BarriosForm.vue';
 import ZonasForm from '@/components/organisms/adminForms/ZonasForm.vue';
 import EdificiosForm from '@/components/organisms/adminForms/EdificiosForm.vue';
 import ClientesForm from '@/components/organisms/adminForms/ClientesForm.vue';
+import ClientesList from '@/components/organisms/adminForms/ClientesList.vue';
 import PropiedadForm from '@/components/organisms/adminForms/PropiedadForm.vue';
 
 const showAmenidadesForm = ref(false);
@@ -108,67 +122,65 @@ const showBarriosForm = ref(false);
 const showZonasForm = ref(false);
 const showEdificiosForm = ref(false);
 const showClientesForm = ref(false);
+const showClientesList = ref(false);
 const showPropiedadForm = ref(false);
 
 function handleAmenidadCreated(amenidad) {
-    // Lógica para manejar la creación de una amenidad
     console.log('Amenidad creada:', amenidad);
-    showAmenidadesForm.value = false; // Cerrar el formulario después de crear
+    showAmenidadesForm.value = false; 
 }
 
 function handleCaracteristicaInteriorCreated(caracteristica) {
-    // Lógica para manejar la creación de una característica interior
     console.log('Característica interior creada:', caracteristica);
-    showCaracteristicasInterioresForm.value = false; // Cerrar el formulario después de crear
+    showCaracteristicasInterioresForm.value = false; 
 }
 
 function handleZonaDeInteresCreated(zonaDeInteres) {
-    // Lógica para manejar la creación de una zona de interés
     console.log('Zona de interés creada:', zonaDeInteres);
-    showZonasDeInteresForm.value = false; // Cerrar el formulario después de crear
+    showZonasDeInteresForm.value = false; 
 }
 
 function handleLocalidadCreated(localidad) {
-    // Lógica para manejar la creación de una localidad
     console.log('Localidad creada:', localidad);
-    showLocalidadesForm.value = false; // Cerrar el formulario después de crear
+    showLocalidadesForm.value = false; 
 }
 
 function handleBarrioCreated(barrio) {
-    // Lógica para manejar la creación de un barrio
     console.log('Barrio creado:', barrio);
-    showBarriosForm.value = false; // Cerrar el formulario después de crear
+    showBarriosForm.value = false; 
 }
 
 function handleZonaCreated(zona) {
-    // Lógica para manejar la creación de una zona
     console.log('Zona creada:', zona);
-    showZonasForm.value = false; // Cerrar el formulario después de crear
+    showZonasForm.value = false; 
 }
 
 function handleEdificioCreated(edificio) {
-    // Lógica para manejar la creación de un edificio
     console.log('Edificio creado:', edificio);
-    showEdificiosForm.value = false; // Cerrar el formulario después de crear
+    showEdificiosForm.value = false; 
 } 
 
 function handleClienteCreated(cliente) {
-    // Lógica para manejar la creación de un cliente
     console.log('Cliente creado:', cliente);
-    showClientesForm.value = false; // Cerrar el formulario después de crear
+    showClientesForm.value = false; 
 }
 
+function handleClienteList(clienteList) {
+    console.log('Cliente creado:', clienteList);
+    showClientesList.value = false; 
+}
+
+
 function handlePropiedadCreated(propiedad) {
-    // Lógica para manejar la creación de una propiedad
     console.log('Propiedad creada:', propiedad);
-    showPropiedadForm.value = false; // Cerrar el formulario después de crear
+    showPropiedadForm.value = false; 
 }
 
 </script>
 
 <style scoped>
 .admin-home {
-  min-height: calc(100vh - 60px); /* Ajusta este valor según la altura de tu navbar */
+  min-height: calc(100vh - 60px); 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -186,6 +198,17 @@ function handlePropiedadCreated(propiedad) {
   gap: var(--spacing-md);
   margin: var(--spacing-lg) 0;
 }
+
+.buttons-sub-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  border: 1px solid var(--color-primary-light);
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+}
+
 
 .btn {
   margin: 0 auto;
