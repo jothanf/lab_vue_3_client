@@ -94,6 +94,32 @@
                         {{ edificio.amenidades.map(a => a.nombre).join(', ') || 'N/A' }}
                     </span>
                 </div>
+
+                <div class="campo">
+                    <span class="etiqueta">Zonas de Interés:</span>
+                    <multiselect
+                        v-if="isEditing"
+                        v-model="edificioEditado.zonas_de_interes"
+                        :options="zonasDeInteres"
+                        :multiple="true"
+                        :close-on-select="false"
+                        :clear-on-select="false"
+                        :preserve-search="true"
+                        placeholder="Seleccione zonas de interés"
+                        label="nombre"
+                        track-by="id"
+                        :preselect-first="false"
+                    >
+                        <template v-slot:selection="{ values, isOpen }">
+                            <span class="multiselect__single" v-if="values.length && !isOpen">
+                                {{ values.length }} zona(s) seleccionada(s)
+                            </span>
+                        </template>
+                    </multiselect>
+                    <span v-else class="valor">
+                        {{ edificio.zonas_de_interes.map(z => z.nombre).join(', ') || 'N/A' }}
+                    </span>
+                </div>
             </div>
 
             <!-- Relaciones -->
@@ -238,13 +264,15 @@ export default {
             imagenEditada: {
                 titulo: '',
                 descripcion: ''
-            }
+            },
+            zonasDeInteres: [],
         }
     },
     async created() {
         await this.cargarEdificio();
         await this.cargarBarrios();
         await this.cargarAmenidades();
+        await this.cargarZonasDeInteres();
     },
     methods: {
         async cargarEdificio() {
@@ -286,31 +314,46 @@ export default {
                 console.error('Error al cargar amenidades:', error);
             }
         },
+        async cargarZonasDeInteres() {
+            try {
+                const response = await axios.get('/crm/zonasDeInteres/');
+                this.zonasDeInteres = response.data;
+                console.log('Zonas de interés cargadas:', this.zonasDeInteres);
+            } catch (error) {
+                console.error('Error al cargar zonas de interés:', error);
+            }
+        },
         async guardarCambios() {
             try {
                 const datosAEnviar = { ...this.edificioEditado };
                 
                 console.log('Datos originales:', datosAEnviar);
-                console.log('Amenidades antes de procesar:', datosAEnviar.amenidades);
                 
                 // Asegurarse de que barrio sea un ID
                 if (typeof datosAEnviar.barrio === 'object') {
                     datosAEnviar.barrio = datosAEnviar.barrio.id;
                 }
 
-                // Asegurarse de que las amenidades sean solo IDs
+                // Procesar amenidades
                 if (datosAEnviar.amenidades) {
                     datosAEnviar.amenidades_ids = datosAEnviar.amenidades.map(a => 
                         typeof a === 'object' ? a.id : a
                     );
-                    delete datosAEnviar.amenidades;  // Eliminar el campo original
+                    delete datosAEnviar.amenidades;
+                }
+
+                // Procesar zonas de interés
+                if (datosAEnviar.zonas_de_interes) {
+                    datosAEnviar.zonas_de_interes_ids = datosAEnviar.zonas_de_interes.map(z => 
+                        typeof z === 'object' ? z.id : z
+                    );
+                    delete datosAEnviar.zonas_de_interes;
                 }
 
                 // Eliminar campos que no deben enviarse
                 delete datosAEnviar.barrio_nombre;
                 delete datosAEnviar.barrio_data;
                 delete datosAEnviar.caracteristicas_interiores;
-                delete datosAEnviar.zonas_de_interes;
                 delete datosAEnviar.multimedia;
 
                 console.log('Datos a enviar:', datosAEnviar);
