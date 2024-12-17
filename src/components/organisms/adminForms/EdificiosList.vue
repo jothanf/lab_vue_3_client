@@ -48,6 +48,7 @@ export default {
             }
         },
         verDetalles(id) {
+            // Redirigir a la página de detalles del edificio
             this.$router.push({ path: `/detalles-de-edificio/${id}` });
         }
     }
