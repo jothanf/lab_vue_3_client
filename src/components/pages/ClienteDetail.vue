@@ -20,9 +20,11 @@
             <div class="card-container">
                 <div class="card" v-for="propiedad in propiedades" :key="propiedad.id">
                     <h3>{{ propiedad.titulo }}</h3>
+                    <img v-if="propiedad.multimedia.length > 0" :src="getFullImageUrl(propiedad.multimedia[0].archivo_url)" alt="Imagen de propiedad" class="property-image" />
                     <p><strong>Tipo:</strong> {{ propiedad.tipo_propiedad }}</p>
                     <p><strong>Estado:</strong> {{ propiedad.estado_del_cliente }}</p>
                     <p><strong>Precio:</strong> {{ propiedad.modalidad_de_negocio?.venta_tradicional?.precio || 'No disponible' }}</p>
+                    <p><strong>Amenidades:</strong> {{ propiedad.amenidades.map(a => a.nombre).join(', ') || 'No disponibles' }}</p>
                     <button class="btn btn-secondary" @click="$router.push(`/detalles-de-propiedad/${propiedad.id}`)">
                         Ver Detalles
                     </button>
@@ -30,6 +32,17 @@
             </div>
         </div>
         <p v-else>No hay propiedades registradas para este cliente.</p>
+        <div v-if="requerimientos.length > 0" class="requerimientos-container">
+            <h2>Requerimientos del Cliente</h2>
+            <ul class="requerimientos-list">
+                <li v-for="requerimiento in requerimientos" :key="requerimiento.id" class="requerimiento-item">
+                    <strong>Tipo de Negocio:</strong> {{ requerimiento.tipo_negocio }}<br />
+                    <strong>Presupuesto:</strong> {{ requerimiento.presupuesto_minimo }} - {{ requerimiento.presupuesto_maximo }}<br />
+                    <strong>Estado:</strong> {{ requerimiento.estado }}<br />
+                </li>
+            </ul>
+        </div>
+        <p v-else>No hay requerimientos registrados para este cliente.</p>
     </div>
 </template>
 
@@ -40,28 +53,31 @@ export default {
     data() {
         return {
             cliente: null,
-            propiedades: []
+            propiedades: [],
+            requerimientos: []
         }
     },
     async created() {
         try {
-            // Obtener datos del cliente
             const clienteId = this.$route.params.id;
             const response = await axios.get(`/accounts/cliente/${clienteId}/`);
             this.cliente = response.data;
-            console.log('Datos del cliente:', this.cliente);
 
-            // Obtener propiedades del cliente
             const propiedadesResponse = await axios.get(`/crm/propiedades/?propietario=${clienteId}`);
-            console.log('Respuesta propiedades:', propiedadesResponse.data);
             this.propiedades = propiedadesResponse.data;
+
+            const requerimientosResponse = await axios.get(`/crm/requerimientos/?cliente=${clienteId}`);
+            this.requerimientos = requerimientosResponse.data;
         } catch (error) {
             console.error('Error al cargar los detalles:', error);
         }
     },
     methods: {
-        verDetalles(id) {
-            this.$router.push({ path: `/propiedad/${id}` });
+        getFullImageUrl(url) {
+            if (url && !url.startsWith('http')) {
+                return `http://localhost:8000${url}`;
+            }
+            return url;
         }
     }
 }
@@ -90,6 +106,7 @@ export default {
 .card-container {
     display: flex;
     flex-wrap: wrap;
+    
     gap: 20px;
 }
 
@@ -107,6 +124,13 @@ export default {
     transform: scale(1.05);
 }
 
+.property-image {
+    width: 200px;
+    height: 200px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
 .btn-secondary {
     background-color: var(--color-primary);
     color: white;
@@ -118,5 +142,43 @@ export default {
 
 .btn-secondary:hover {
     background-color: var(--color-primary-dark);
+}
+
+.property-image {
+    width: 100px;
+    height: 100px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.requerimientos-container {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-mine-shaft-100);
+    border-radius: var(--border-radius-md);
+    background-color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+}
+
+.requerimientos-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.requerimiento-item {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-mine-shaft-100);
+}
+
+.requerimiento-item:last-child {
+    border-bottom: none;
+}
+
+.requerimiento-item strong {
+    color: var(--color-primary);
+}
+
+.requerimiento-item:hover {
+    background-color: var(--color-white-sand-50);
 }
 </style>

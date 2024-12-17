@@ -48,23 +48,55 @@
       </div>
 
       <div class="form-group">
+        <label for="direccion">Dirección (opcional):</label>
+        <input 
+          type="text" 
+          id="direccion" 
+          v-model="formData.direccion" 
+          class="form-control"
+          maxlength="200"
+        >
+      </div>
+
+      <div class="form-group">
         <label for="ubicacion">Ubicación (Longitud y Latitud):</label>
         <div class="d-flex">
           <input 
             type="number" 
-            placeholder="Longitud" 
+            placeholder="Longitud (opcional)" 
             v-model="formData.ubicacion.longitud" 
             class="form-control" 
-            required 
           />
           <input 
             type="number" 
-            placeholder="Latitud" 
+            placeholder="Latitud (opcional)" 
             v-model="formData.ubicacion.latitud" 
             class="form-control" 
-            required 
           />
         </div>
+      </div>
+
+      <div class="form-group">
+        <label for="icono">Ícono:</label>
+        <input 
+          type="file" 
+          id="icono" 
+          @change="handleIconoChange" 
+          class="form-control"
+          accept="image/*"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="multimedia">Multimedia (opcional):</label>
+        <input 
+          type="file" 
+          id="multimedia" 
+          @change="handleMultimediaChange" 
+          class="form-control"
+          accept="image/*,video/*" 
+          multiple
+        >
       </div>
 
       <button type="submit" class="btn btn-primary">Guardar Zona de Interés</button>
@@ -83,38 +115,84 @@ export default {
         nombre: '',
         categoria: '',
         descripcion: '',
+        direccion: '',
         ubicacion: {
           longitud: null,
           latitud: null,
         },
+        icono: null, // Para el ícono
+        multimedia: [] // Para las imágenes multimedia
       },
       notification: null
     }
   },
   methods: {
-    showNotification(message) {
-      alert(message);
+    showNotification(message, type = 'success') {
+      this.notification = {
+        message,
+        type
+      };
+      setTimeout(() => {
+        this.notification = null;
+      }, 5000);
+    },
+
+    handleIconoChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.formData.icono = file; // Guardar el archivo en formData
+      }
+    },
+
+    handleMultimediaChange(event) {
+      this.formData.multimedia = Array.from(event.target.files); // Guardar los archivos multimedia
     },
 
     async submitForm() {
       try {
         // Validaciones básicas
         if (!this.formData.nombre || !this.formData.categoria) {
-          alert('Por favor complete los campos obligatorios');
+          this.showNotification('Por favor complete los campos obligatorios', 'warning');
           return;
         }
 
-        const response = await axios.post('/crm/zonasDeInteres/', this.formData);
+        // Crear un objeto FormData
+        const formDataToSend = new FormData();
+        formDataToSend.append('nombre', this.formData.nombre);
+        formDataToSend.append('categoria', this.formData.categoria);
+        formDataToSend.append('descripcion', this.formData.descripcion);
+        formDataToSend.append('direccion', this.formData.direccion || null);
+
+        // Agregar ubicación solo si hay valores
+        if (this.formData.ubicacion.longitud || this.formData.ubicacion.latitud) {
+          formDataToSend.append('ubicacion', JSON.stringify(this.formData.ubicacion));
+        }
+
+        // Agregar ícono si existe
+        if (this.formData.icono) {
+          formDataToSend.append('icono', this.formData.icono);
+        }
+
+        // Agregar multimedia si existe
+        for (const archivo of this.formData.multimedia) {
+          formDataToSend.append('multimedia', archivo);
+        }
+
+        // Enviar datos al backend
+        const response = await axios.post('/crm/zonasDeInteres/', formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
         
-        // Mostrar alert de éxito y esperar confirmación
-        alert('Zona de interés creada exitosamente');
-        
-        // Emitir eventos después de que el usuario confirme
-        this.$emit('zona-de-interes-created', response.data);
-        this.$emit('submit-success', response.data);
+        console.log('Respuesta del servidor:', response.data);
+        this.showNotification('Zona de interés creada exitosamente');
         
         // Limpiar el formulario
         this.resetForm();
+        
+        // Emitir evento para actualizar la lista
+        this.$emit('zona-de-interes-created', response.data);
 
       } catch (error) {
         console.error('Error al crear zona de interés:', error);
@@ -126,8 +204,7 @@ export default {
             : error.response.data;
         }
         
-        // Mostrar alert de error
-        alert(errorMessage);
+        this.showNotification(errorMessage, 'danger');
       }
     },
 
@@ -136,10 +213,13 @@ export default {
         nombre: '',
         categoria: '',
         descripcion: '',
+        direccion: '',
         ubicacion: {
           longitud: null,
           latitud: null,
         },
+        icono: null,
+        multimedia: []
       };
     }
   }
@@ -176,30 +256,5 @@ export default {
 
 .btn:hover {
   background-color: #0056b3;
-}
-
-.alert {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
-}
-
-.alert-success {
-  color: #155724;
-  background-color: #d4edda;
-  border-color: #c3e6cb;
-}
-
-.alert-danger {
-  color: #721c24;
-  background-color: #f8d7da;
-  border-color: #f5c6cb;
-}
-
-.alert-warning {
-  color: #856404;
-  background-color: #fff3cd;
-  border-color: #ffeeba;
 }
 </style>

@@ -47,6 +47,17 @@
         ></textarea>
       </div>
 
+      <div class="form-group">
+        <label for="icono">Ícono:</label>
+        <input 
+          type="file" 
+          id="icono" 
+          @change="handleFileUpload" 
+          class="form-control"
+          accept="image/*"
+        >
+      </div>
+
       <button type="submit" class="btn btn-primary btn-submit">Guardar Amenidad</button>
     </form>
   </div>
@@ -78,7 +89,19 @@ export default {
       }, 5000);
     },
 
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.formData.icono = file; // Guardar el archivo en formData
+      }
+    },
+
     async submitForm() {
+      const formDataToSend = new FormData();
+      for (const key in this.formData) {
+        formDataToSend.append(key, this.formData[key]);
+      }
+
       try {
         // Validaciones básicas
         if (!this.formData.nombre || !this.formData.categoria) {
@@ -87,7 +110,7 @@ export default {
         }
 
         // Enviar datos al backend usando la ruta correcta
-        const response = await axios.post('/crm/amenidades/', this.formData);
+        const response = await axios.post('/crm/amenidades/', formDataToSend);
         
         console.log('Respuesta del servidor:', response.data);
         this.showNotification('Amenidad creada exitosamente');

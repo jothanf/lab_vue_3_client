@@ -2,9 +2,13 @@
   <form @submit.prevent="registerPropiedad">
     <h2>Registro de Propiedad</h2>
     
-    <!-- Notificaciones -->
-    <div v-if="notification" :class="['alert', `alert-${notification.type}`]">
-      {{ notification.message }}
+    <!-- Mensajes de error o éxito -->
+    <div v-if="responseMessage" class="message" :class="{ 
+        'success-message': isSuccess, 
+        'error-message': !isSuccess 
+    }">
+        <i :class="isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+        {{ formattedResponse }}
     </div>
 
     <!-- Propietario -->
@@ -105,7 +109,9 @@
       </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar Propiedad</button>
+    <button type="submit" :disabled="loading" class="btn btn-primary">
+      {{ loading ? 'Registrando...' : 'Registrar Propiedad' }}
+    </button>
   </form>
 </template>
 
@@ -132,10 +138,15 @@ const form = ref({
 // Estados para listas desplegables
 const clientes = ref([]);
 const edificios = ref([]);
-const notification = ref(null);
 
 // Estado para información del agente
 const agenteActual = ref(null);
+
+// Estados para mensajes y loading
+const loading = ref(false);
+const responseMessage = ref(false);
+const isSuccess = ref(false);
+const formattedResponse = ref('');
 
 // Función para obtener el ID del agente
 const obtenerIdAgente = () => {
@@ -160,63 +171,76 @@ const obtenerIdAgente = () => {
   return null;
 };
 
-// Función para registrar propiedad
+// Función para mostrar mensaje de éxito
+const showSuccess = (message) => {
+  isSuccess.value = true;
+  formattedResponse.value = message;
+  responseMessage.value = true;
+  
+  // Solo cerrar después de 3 segundos si fue exitoso
+  setTimeout(() => {
+    if (isSuccess.value) {
+      resetForm();
+      emit('propiedad-created');
+    }
+  }, 3000);
+};
+
+// Función para mostrar mensaje de error
+const showError = (message) => {
+  isSuccess.value = false;
+  formattedResponse.value = message;
+  responseMessage.value = true;
+};
+
+// Función para resetear el formulario
+const resetForm = () => {
+  form.value = {
+    propietario: '',
+    titulo: '',
+    tipo_propiedad: '',
+    edificio: '',
+    agente: null,
+    modalidad_de_negocio: {
+      venta_tradicional: { activo: false, precio: '' },
+      renta_tradicional: { activo: false, precio: '' }
+    }
+  };
+};
+
+// Función modificada para registrar propiedad
 const registerPropiedad = async () => {
+  loading.value = true;
+  responseMessage.value = false;
+
   try {
     const agenteId = obtenerIdAgente();
-
     if (!agenteId) {
-      console.error('No se encontró ID del agente');
-      showNotification('No se encontró información del agente', 'error');
+      showError('No se encontró información del agente');
       return;
     }
 
-    // Preparar datos para enviar
     const dataToSend = {
       ...form.value,
       agente: parseInt(agenteId)
     };
 
     console.log('Datos a enviar:', dataToSend);
-    console.log('Tipo de agente ID:', typeof dataToSend.agente);
+    await axios.post('/crm/propiedades/', dataToSend);
+    showSuccess('¡Propiedad registrada exitosamente!');
 
-    const response = await axios.post('/crm/propiedades/', dataToSend);
-
-    // Mostrar notificación de éxito
-    showNotification('Propiedad creada exitosamente');
-    
-    // Emitir evento para informar que se creó la propiedad
-    emit('propiedad-created', response.data);
-    
-    // Resetear formulario
-    form.value = {
-      propietario: '',
-      titulo: '',
-      tipo_propiedad: '',
-      edificio: '',
-      agente: null,
-      modalidad_de_negocio: {
-        venta_tradicional: { activo: false, precio: '' },
-        renta_tradicional: { activo: false, precio: '' }
-      }
-    };
   } catch (error) {
     console.error('Error al crear propiedad:', error);
+    let errorMessage = 'Error al registrar la propiedad';
     
-    // Mostrar mensaje de error específico o genérico
-    showNotification(
-      error.response?.data?.error || 'Error al crear la propiedad', 
-      'error'
-    );
+    if (error.response) {
+      errorMessage = error.response.data.message || errorMessage;
+    }
+    
+    showError(errorMessage);
+  } finally {
+    loading.value = false;
   }
-};
-
-// Función para mostrar notificaciones
-const showNotification = (message, type = 'success') => {
-  notification.value = { message, type };
-  setTimeout(() => {
-    notification.value = null;
-  }, 3000);
 };
 
 // Función para obtener clientes
@@ -226,7 +250,7 @@ const fetchClientes = async () => {
     clientes.value = response.data;
   } catch (error) {
     console.error('Error al obtener clientes:', error);
-    showNotification('Error al cargar los clientes', 'error');
+    showError('Error al cargar los clientes');
   }
 };
 
@@ -237,7 +261,7 @@ const fetchEdificios = async () => {
     edificios.value = response.data;
   } catch (error) {
     console.error('Error al obtener edificios:', error);
-    showNotification('Error al cargar los edificios', 'error');
+    showError('Error al cargar los edificios');
   }
 };
 
@@ -262,15 +286,15 @@ onMounted(() => {
         console.log('Agente actual cargado:', agenteActual.value);
       } else {
         console.error('Estructura de usuario inválida');
-        showNotification('Error al cargar información del agente', 'error');
+        showError('Error al cargar información del agente');
       }
     } catch (error) {
       console.error('Error al parsear información del usuario:', error);
-      showNotification('Error al cargar información del agente', 'error');
+      showError('Error al cargar información del agente');
     }
   } else {
     console.error('No se encontró información de usuario');
-    showNotification('No se encontró información del agente', 'error');
+    showError('No se encontró información del agente');
   }
 
   // Cargar listas desplegables
@@ -302,19 +326,35 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.alert {
-  padding: 10px;
-  margin-bottom: 1rem;
+.message {
+  margin: 1rem 0;
+  padding: 1rem;
   border-radius: 4px;
+  text-align: center;
+  font-weight: bold;
+  animation: fadeIn 0.3s ease;
 }
 
-.alert-success {
+.success-message {
   background-color: #d4edda;
   color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
-.alert-error {
+.error-message {
   background-color: #f8d7da;
   color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

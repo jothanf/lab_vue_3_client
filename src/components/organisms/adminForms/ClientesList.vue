@@ -2,19 +2,49 @@
     <div>
         <h1>Clientes</h1>
         <input type="text" v-model="searchQuery" placeholder="Buscar cliente..." />
-        <ul v-if="filtrados.length > 0">
-            <li v-for="cliente in paginados" :key="cliente.id">
-                {{ cliente.nombre }} {{ cliente.apellidos }}
-                <button @click="editarCliente(cliente.id)" class="btn btn-secondary">Editar</button>
-                <button @click="eliminarCliente(cliente.id)" class="btn btn-secondary">Eliminar</button>
-                <button @click="verDetalles(cliente.id)" class="btn btn-secondary">Detalles</button>
-            </li>
-        </ul>
+        <div v-if="filtrados.length > 0" class="clientes-grid">
+            <div v-for="cliente in paginados" :key="cliente.id" class="cliente-card">
+                <div class="cliente-info">
+                    <h3>{{ cliente.nombre }} {{ cliente.apellidos }}</h3>
+                    <p><strong>ID:</strong> {{ cliente.id }}</p>
+                    <p><strong>Email:</strong> {{ cliente.email }}</p>
+                    <p><strong>Teléfono:</strong> {{ cliente.telefono }}</p>
+                </div>
+                <div class="cliente-actions">
+                    <button @click="verDetalles(cliente.id)" class="btn btn-secondary">Detalles</button>
+                </div>
+            </div>
+        </div>
         <p v-else>No hay clientes disponibles.</p>
-        <div v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
-        <button @click="cargarMas" v-if="pagina < totalPaginas">Cargar más</button>
+        <div class="pagination" v-if="filtrados.length > limite">
+            <button @click="cargarMas" v-if="pagina < totalPaginas">Cargar más</button>
+        </div>
     </div>
 </template>
+
+<style scoped>
+.clientes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.cliente-card {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-md);
+}
+
+.cliente-info {
+    margin-bottom: var(--spacing-md);
+}
+
+.cliente-actions {
+    display: flex;
+    justify-content: space-between;
+}
+</style>
 
 <script>
 import axios from '@/utils/axios';
@@ -26,7 +56,7 @@ export default {
             errorMessage: null,
             searchQuery: '',
             pagina: 1,
-            limite: 10, // Número de clientes por página
+            limite: 10,
         };
     },
     computed: {

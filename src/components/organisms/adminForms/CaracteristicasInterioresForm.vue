@@ -41,6 +41,17 @@
         </div>
   
         <div class="form-group">
+          <label for="icono">Ícono:</label>
+          <input 
+            type="file" 
+            id="icono" 
+            @change="handleIconoChange" 
+            accept="image/*" 
+            class="form-control"
+          >
+        </div>
+  
+        <div class="form-group">
           <label for="descripcion">Descripción:</label>
           <textarea 
             id="descripcion" 
@@ -66,6 +77,7 @@ export default {
         caracteristica: '',
         categoria: '',
         descripcion: '',
+        icono: null,
       },
       notification: null
     }
@@ -81,6 +93,13 @@ export default {
       }, 5000);
     },
 
+    handleIconoChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.formData.icono = file;
+      }
+    },
+
     async submitForm() {
       try {
         // Validaciones básicas
@@ -89,8 +108,16 @@ export default {
           return;
         }
 
+        const formData = new FormData();
+        formData.append('caracteristica', this.formData.caracteristica);
+        formData.append('categoria', this.formData.categoria);
+        formData.append('descripcion', this.formData.descripcion);
+        if (this.formData.icono) {
+          formData.append('icono', this.formData.icono);
+        }
+
         // Enviar datos al backend usando la ruta correcta
-        const response = await axios.post('/crm/caracteristicasInteriores/', this.formData);
+        const response = await axios.post('/crm/caracteristicasInteriores/', formData);
         
         console.log('Respuesta del servidor:', response.data);
         this.showNotification('Característica interior creada exitosamente');
@@ -120,6 +147,7 @@ export default {
         caracteristica: '',
         categoria: '',
         descripcion: '',
+        icono: null,
       };
     }
   }
