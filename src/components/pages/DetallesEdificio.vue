@@ -68,6 +68,32 @@
                     </select>
                     <span v-else class="valor">{{ edificio.barrio ? edificio.barrio.nombre : 'N/A' }}</span>
                 </div>
+
+                <div class="campo">
+                    <span class="etiqueta">Amenidades:</span>
+                    <multiselect
+                        v-if="isEditing"
+                        v-model="edificioEditado.amenidades"
+                        :options="amenidades"
+                        :multiple="true"
+                        :close-on-select="false"
+                        :clear-on-select="false"
+                        :preserve-search="true"
+                        placeholder="Seleccione amenidades"
+                        label="nombre"
+                        track-by="id"
+                        :preselect-first="false"
+                    >
+                        <template v-slot:selection="{ values, isOpen }">
+                            <span class="multiselect__single" v-if="values.length && !isOpen">
+                                {{ values.length }} amenidad(es) seleccionada(s)
+                            </span>
+                        </template>
+                    </multiselect>
+                    <span v-else class="valor">
+                        {{ edificio.amenidades.map(a => a.nombre).join(', ') || 'N/A' }}
+                    </span>
+                </div>
             </div>
 
             <!-- Relaciones -->
@@ -80,16 +106,18 @@
                 </div>
 
                 <h3>Amenidades</h3>
-                <div class="lista-items">
-                    <div v-for="amenidad in edificio.amenidades" :key="amenidad.id">
-                        {{ amenidad.nombre }}
+                <div class="lista-items-amenidades">
+                    <div v-for="amenidad in edificio.amenidades" :key="amenidad.id" class="amenidad-item">
+                        <img v-if="amenidad.icono" :src="amenidad.icono" alt="Icono de amenidad" class="icono-amenidad">
+                        <span>{{ amenidad.nombre }}</span>
                     </div>
                 </div>
 
                 <h3>Zonas de Interés</h3>
                 <div class="lista-items">
-                    <div v-for="zona in edificio.zonas_de_interes" :key="zona.id">
-                        {{ zona.nombre }}
+                    <div v-for="zona in edificio.zonas_de_interes" :key="zona.id" class="zona-interes-item">
+                        <img v-if="zona.icono" :src="zona.icono" alt="Icono de zona de interés" class="icono-zona-interes">
+                        <span>{{ zona.nombre }}</span>
                     </div>
                 </div>
             </div>
@@ -186,16 +214,20 @@
 <script>
 import axios from '@/utils/axios';
 import eventBus from '@/utils/eventBus';
-
+import Multiselect from 'vue-multiselect';
 
 export default {
     name: 'DetallesEdificio',
+    components: {
+        Multiselect
+    },
     data() {
         return {
             edificio: null,
             edificioEditado: null,
             isEditing: false,
             barrios: [],
+            amenidades: [],
             nuevaMultimedia: {
                 archivo: null,
                 titulo: '',
@@ -212,6 +244,7 @@ export default {
     async created() {
         await this.cargarEdificio();
         await this.cargarBarrios();
+        await this.cargarAmenidades();
     },
     methods: {
         async cargarEdificio() {
@@ -244,26 +277,50 @@ export default {
                 console.error('Error al cargar barrios:', error);
             }
         },
+        async cargarAmenidades() {
+            try {
+                const response = await axios.get('/crm/amenidades/');
+                this.amenidades = response.data;
+                console.log('Amenidades cargadas:', this.amenidades);
+            } catch (error) {
+                console.error('Error al cargar amenidades:', error);
+            }
+        },
         async guardarCambios() {
             try {
                 const datosAEnviar = { ...this.edificioEditado };
+                
+                console.log('Datos originales:', datosAEnviar);
+                console.log('Amenidades antes de procesar:', datosAEnviar.amenidades);
                 
                 // Asegurarse de que barrio sea un ID
                 if (typeof datosAEnviar.barrio === 'object') {
                     datosAEnviar.barrio = datosAEnviar.barrio.id;
                 }
 
+                // Asegurarse de que las amenidades sean solo IDs
+                if (datosAEnviar.amenidades) {
+                    datosAEnviar.amenidades_ids = datosAEnviar.amenidades.map(a => 
+                        typeof a === 'object' ? a.id : a
+                    );
+                    delete datosAEnviar.amenidades;  // Eliminar el campo original
+                }
+
                 // Eliminar campos que no deben enviarse
                 delete datosAEnviar.barrio_nombre;
                 delete datosAEnviar.barrio_data;
                 delete datosAEnviar.caracteristicas_interiores;
-                delete datosAEnviar.amenidades;
                 delete datosAEnviar.zonas_de_interes;
+                delete datosAEnviar.multimedia;
+
+                console.log('Datos a enviar:', datosAEnviar);
 
                 const response = await axios.put(
                     `/crm/edificios/${this.edificio.id}/`,
                     datosAEnviar
                 );
+
+                console.log('Respuesta del servidor:', response.data);
 
                 this.edificio = response.data;
                 this.edificioEditado = { ...response.data };
@@ -273,7 +330,8 @@ export default {
                 
                 alert("Cambios guardados exitosamente");
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error completo:', error);
+                console.error('Datos del error:', error.response?.data);
                 alert("Error al guardar los cambios: " + (error.response?.data?.error || error.message));
             }
         },
@@ -395,6 +453,16 @@ export default {
     padding: var(--spacing-sm);
     background-color: var(--color-background-light);
     border-radius: var(--border-radius-sm);
+}
+
+.lista-items-amenidades img {
+    width: 20px;
+    height: 20px;
+}
+
+.zona-interes-item img {
+    width: 20px;
+    height: 20px;
 }
 
 .galeria-imagenes {
@@ -525,4 +593,6 @@ export default {
 .agregar-multimedia button:hover {
     background-color: var(--color-background-light);
 }
+
+@import 'vue-multiselect/dist/vue-multiselect.min.css';
 </style>
