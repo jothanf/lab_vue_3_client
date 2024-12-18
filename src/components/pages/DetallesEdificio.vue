@@ -16,132 +16,139 @@
         <div class="info-section">
             <div class="main-info">
                 <!-- Información básica -->
-                <div class="campo">
-                    <span class="etiqueta">Nombre:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.nombre" class="input" />
-                    <span v-else class="valor">{{ edificio.nombre }}</span>
-                </div>
+                <div class="info-tarjeta">
+                    <div class="campo">
+                        <span class="etiqueta">Nombre:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.nombre" class="input" />
+                        <span v-else class="valor">{{ edificio.nombre }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Sigla:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.sigla" class="input" />
-                    <span v-else class="valor">{{ edificio.sigla || 'N/A' }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Sigla:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.sigla" class="input" />
+                        <span v-else class="valor">{{ edificio.sigla || 'N/A' }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Desarrollador:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.desarrollador" class="input" />
-                    <span v-else class="valor">{{ edificio.desarrollador }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Desarrollador:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.desarrollador" class="input" />
+                        <span v-else class="valor">{{ edificio.desarrollador }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Descripción:</span>
-                    <textarea v-if="isEditing" v-model="edificioEditado.descripcion" class="input textarea"></textarea>
-                    <span v-else class="valor">{{ edificio.descripcion }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Estado:</span>
+                        <select v-if="isEditing" v-model="edificioEditado.estado" class="input">
+                            <option v-for="estado in estados" :key="estado" :value="estado">
+                                {{ estado }}
+                            </option>
+                        </select>
+                        <span v-else class="valor">{{ edificio.estado }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Dirección:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.direccion" class="input" />
-                    <span v-else class="valor">{{ edificio.direccion }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Tipo de edificio:</span>
+                        <select v-if="isEditing" v-model="edificioEditado.tipo_edificio" class="input">
+                            <option v-for="tipo in tiposEdificio" :key="tipo" :value="tipo">
+                                {{ tipo }}
+                            </option>
+                        </select>
+                        <span v-else class="valor">{{ edificio.tipo_edificio }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Teléfono:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.telefono" class="input" />
-                    <span v-else class="valor">{{ edificio.telefono || 'N/A' }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Descripción:</span>
+                        <textarea v-if="isEditing" v-model="edificioEditado.descripcion" class="input textarea"></textarea>
+                        <span v-else class="valor">{{ edificio.descripcion }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Estrato:</span>
-                    <input v-if="isEditing" v-model="edificioEditado.estrato" type="number" class="input" />
-                    <span v-else class="valor">{{ edificio.estrato }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Dirección:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.direccion" class="input" />
+                        <span v-else class="valor">{{ edificio.direccion }}</span>
+                    </div>
 
-                <!-- Información del Barrio -->
-                <div class="campo">
-                    <span class="etiqueta">Barrio:</span>
-                    <select v-if="isEditing" v-model="edificioEditado.barrio" class="input">
-                        <option v-for="barrio in barrios" :key="barrio.id" :value="barrio.id">
-                            {{ barrio.nombre }}
-                        </option>
-                    </select>
-                    <span v-else class="valor">{{ edificio.barrio ? edificio.barrio.nombre : 'N/A' }}</span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Teléfono:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.telefono" class="input" />
+                        <span v-else class="valor">{{ edificio.telefono || 'N/A' }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Amenidades:</span>
-                    <multiselect
-                        v-if="isEditing"
-                        v-model="edificioEditado.amenidades"
-                        :options="amenidades"
-                        :multiple="true"
-                        :close-on-select="false"
-                        :clear-on-select="false"
-                        :preserve-search="true"
-                        placeholder="Seleccione amenidades"
-                        label="nombre"
-                        track-by="id"
-                        :preselect-first="false"
-                    >
-                        <template v-slot:selection="{ values, isOpen }">
-                            <span class="multiselect__single" v-if="values.length && !isOpen">
-                                {{ values.length }} amenidad(es) seleccionada(s)
-                            </span>
-                        </template>
-                    </multiselect>
-                    <span v-else class="valor">
-                        {{ edificio.amenidades.map(a => a.nombre).join(', ') || 'N/A' }}
-                    </span>
-                </div>
+                    <div class="campo">
+                        <span class="etiqueta">Estrato:</span>
+                        <input v-if="isEditing" v-model="edificioEditado.estrato" type="number" class="input" />
+                        <span v-else class="valor">{{ edificio.estrato }}</span>
+                    </div>
 
-                <div class="campo">
-                    <span class="etiqueta">Zonas de Interés:</span>
-                    <multiselect
-                        v-if="isEditing"
-                        v-model="edificioEditado.zonas_de_interes"
-                        :options="zonasDeInteres"
-                        :multiple="true"
-                        :close-on-select="false"
-                        :clear-on-select="false"
-                        :preserve-search="true"
-                        placeholder="Seleccione zonas de interés"
-                        label="nombre"
-                        track-by="id"
-                        :preselect-first="false"
-                    >
-                        <template v-slot:selection="{ values, isOpen }">
-                            <span class="multiselect__single" v-if="values.length && !isOpen">
-                                {{ values.length }} zona(s) seleccionada(s)
-                            </span>
-                        </template>
-                    </multiselect>
-                    <span v-else class="valor">
-                        {{ edificio.zonas_de_interes.map(z => z.nombre).join(', ') || 'N/A' }}
-                    </span>
+                    <!-- Información del Barrio -->
+                    <div class="campo">
+                        <span class="etiqueta">Barrio:</span>
+                        <select v-if="isEditing" v-model="edificioEditado.barrio" class="input">
+                            <option v-for="barrio in barrios" :key="barrio.id" :value="barrio.id">
+                                {{ barrio.nombre }}
+                            </option>
+                        </select>
+                        <span v-else class="valor">{{ edificio.barrio ? edificio.barrio.nombre : 'N/A' }}</span>
+                    </div>
+
+                    <div v-if="isEditing" class="campo">
+                        <span class="etiqueta">Amenidades:</span>
+                        <multiselect
+                            v-model="edificioEditado.amenidades"
+                            :options="amenidades"
+                            :multiple="true"
+                            :close-on-select="false"
+                            :clear-on-select="false"
+                            :preserve-search="true"
+                            placeholder="Seleccione amenidades"
+                            label="nombre"
+                            track-by="id"
+                            :preselect-first="false"
+                        >
+                            <template v-slot:selection="{ values, isOpen }">
+                                <span class="multiselect__single" v-if="values.length && !isOpen">
+                                    {{ values.length }} amenidad(es) seleccionada(s)
+                                </span>
+                            </template>
+                        </multiselect>
+                    </div>
+
+                    <div v-if="isEditing" class="campo">
+                        <span class="etiqueta">Zonas de Interés:</span>
+                        <multiselect
+                            v-model="edificioEditado.zonas_de_interes"
+                            :options="zonasDeInteres"
+                            :multiple="true"
+                            :close-on-select="false"
+                            :clear-on-select="false"
+                            :preserve-search="true"
+                            placeholder="Seleccione zonas de interés"
+                            label="nombre"
+                            track-by="id"
+                            :preselect-first="false"
+                        >
+                            <template v-slot:selection="{ values, isOpen }">
+                                <span class="multiselect__single" v-if="values.length && !isOpen">
+                                    {{ values.length }} zona(s) seleccionada(s)
+                                </span>
+                            </template>
+                        </multiselect>
+                    </div>
                 </div>
             </div>
 
             <!-- Relaciones -->
             <div class="relaciones-section">
-                <h3>Características Interiores</h3>
-                <div class="lista-items">
-                    <div v-for="caract in edificio.caracteristicas_interiores" :key="caract.id">
-                        {{ caract.nombre }}
-                    </div>
-                </div>
-
-                <h3>Amenidades</h3>
                 <div class="lista-items-amenidades">
-                    <div v-for="amenidad in edificio.amenidades" :key="amenidad.id" class="amenidad-item">
+                    <h3>Amenidades</h3>
+                    <div v-for="amenidad in edificio.amenidades" :key="amenidad.id" class="amenidad-item" @click="abrirPopupAmenidad(amenidad)">
                         <img v-if="amenidad.icono" :src="amenidad.icono" alt="Icono de amenidad" class="icono-amenidad">
                         <span>{{ amenidad.nombre }}</span>
                     </div>
                 </div>
 
-                <h3>Zonas de Interés</h3>
                 <div class="lista-items">
-                    <div v-for="zona in edificio.zonas_de_interes" :key="zona.id" class="zona-interes-item">
+                    <h3>Zonas de Interés</h3>
+                    <div v-for="zona in edificio.zonas_de_interes" :key="zona.id" class="zona-interes-item" @click="abrirPopup(zona)">
                         <img v-if="zona.icono" :src="zona.icono" alt="Icono de zona de interés" class="icono-zona-interes">
                         <span>{{ zona.nombre }}</span>
                     </div>
@@ -234,6 +241,46 @@
                 </form>
             </div>
         </section>
+
+        <!-- Popup para mostrar información de la zona de interés -->
+        <MyPopUp :visible="popupVisible" :titulo="zonaInteresSeleccionada?.nombre" @cerrar="cerrarPopup">
+            <div>
+                <img v-if="zonaInteresSeleccionada?.icono" :src="zonaInteresSeleccionada.icono" alt="Icono de zona de interés" class="icono-zona-popup">
+                <p><strong>Nombre:</strong> {{ zonaInteresSeleccionada?.nombre }}</p>
+                <p><strong>Categoría:</strong> {{ zonaInteresSeleccionada?.categoria }}</p>
+                <p><strong>Descripción:</strong> {{ zonaInteresSeleccionada?.descripcion }}</p>
+                <p><strong>Ubicación:</strong> {{ zonaInteresSeleccionada?.ubicacion }}</p>
+                <p><strong>Dirección:</strong> {{ zonaInteresSeleccionada?.direccion }}</p>
+
+                <!-- Mostrar multimedia asociada -->
+                <div v-if="zonaInteresSeleccionada?.multimedia && zonaInteresSeleccionada.multimedia.length">
+                    <h4>Multimedia:</h4>
+                    <div class="galeria-multimedia">
+                        <div v-for="item in zonaInteresSeleccionada.multimedia" :key="item.id" class="multimedia-item">
+                            <template v-if="item.tipo === 'foto'">
+                                <img :src="item.archivo" alt="Multimedia de zona de interés" class="multimedia-imagen">
+                            </template>
+                            <template v-else-if="item.tipo === 'video'">
+                                <video controls class="multimedia-video">
+                                    <source :src="item.archivo" type="video/mp4">
+                                    Tu navegador no soporta la etiqueta de video.
+                                </video>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </MyPopUp>
+
+        <!-- Popup para mostrar información de la amenidad -->
+        <MyPopUp :visible="popupAmenidadVisible" :titulo="amenidadSeleccionada?.nombre" @cerrar="cerrarPopupAmenidad">
+            <div>
+                <img v-if="amenidadSeleccionada?.icono" :src="amenidadSeleccionada.icono" alt="Icono de amenidad" class="icono-amenidad-popup">
+                <p><strong>Nombre:</strong> {{ amenidadSeleccionada?.nombre }}</p>
+                <p><strong>Categoría:</strong> {{ amenidadSeleccionada?.categoria }}</p>
+                <p><strong>Descripción:</strong> {{ amenidadSeleccionada?.descripcion }}</p>
+            </div>
+        </MyPopUp>
     </div>
 </template>
 
@@ -241,11 +288,13 @@
 import axios from '@/utils/axios';
 import eventBus from '@/utils/eventBus';
 import Multiselect from 'vue-multiselect';
+import MyPopUp from '@/components/molecules/MyPopUp.vue';
 
 export default {
     name: 'DetallesEdificio',
     components: {
-        Multiselect
+        Multiselect,
+        MyPopUp,
     },
     data() {
         return {
@@ -266,6 +315,12 @@ export default {
                 descripcion: ''
             },
             zonasDeInteres: [],
+            estados: ['Entregado', 'En construcción', 'Pre-construccion'],
+            tiposEdificio: ['Edificio Residencial', 'Conjunto Residencial', 'Club House'],
+            popupVisible: false,
+            zonaInteresSeleccionada: null,
+            popupAmenidadVisible: false,
+            amenidadSeleccionada: null,
         }
     },
     async created() {
@@ -426,18 +481,40 @@ export default {
             try {
                 if (!confirm('¿Está seguro de eliminar este elemento?')) return;
 
+                console.log('Intentando eliminar multimedia:', multimediaId);
+                
                 await axios.delete(`/crm/edificios/${this.edificio.id}/multimedia/${multimediaId}/`);
+                console.log('Multimedia eliminada exitosamente');
+                
+                // Recargar el edificio para actualizar la lista de multimedia
                 await this.cargarEdificio();
             } catch (error) {
                 console.error('Error al eliminar multimedia:', error);
-                alert('Error al eliminar multimedia');
+                alert('Error al eliminar multimedia: ' + (error.response?.data?.error || error.message));
             }
+        },
+        abrirPopup(zona) {
+            this.zonaInteresSeleccionada = zona;
+            this.popupVisible = true;
+        },
+        cerrarPopup() {
+            this.popupVisible = false;
+            this.zonaInteresSeleccionada = null;
+        },
+        abrirPopupAmenidad(amenidad) {
+            this.amenidadSeleccionada = amenidad;
+            this.popupAmenidadVisible = true;
+        },
+        cerrarPopupAmenidad() {
+            this.popupAmenidadVisible = false;
+            this.amenidadSeleccionada = null;
         }
     }
 }
 </script>
 
 <style scoped>
+@import 'vue-multiselect/dist/vue-multiselect.min.css';
 .detalles-edificio {
     padding: var(--spacing-lg);
     max-width: 1200px;
@@ -483,6 +560,23 @@ export default {
 
 .relaciones-section {
     margin-top: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.lista-items-amenidades,
+.lista-items {
+    flex: 1;
+    padding: var(--spacing-md);
+    margin-right: var(--spacing-md);
+    border: 1px solid var(--color-mine-shaft-100);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--color-white);
+}
+
+.lista-items:last-child {
+    margin-right: 0;
 }
 
 .lista-items {
@@ -637,5 +731,80 @@ export default {
     background-color: var(--color-background-light);
 }
 
-@import 'vue-multiselect/dist/vue-multiselect.min.css';
+
+.info-tarjeta {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.campo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.lista-items-amenidades {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+}
+
+.lista-items-amenidades > div {
+    padding: var(--spacing-sm);
+    background-color: var(--color-background-light);
+    border-radius: var(--border-radius-sm);
+}
+
+/* Efecto hover para amenidades y zonas de interés */
+.amenidad-item,
+.zona-interes-item {
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.amenidad-item:hover,
+.zona-interes-item:hover {
+    background-color: #f0f0f0; /* Cambia el color de fondo al hacer hover */
+    transform: scale(1.05); /* Aumenta ligeramente el tamaño */
+}
+
+.icono-amenidad-popup {
+    max-width: 100px; /* Ajusta el tamaño máximo de la imagen */
+    height: auto; /* Mantiene la proporción de la imagen */
+    margin-bottom: 10px; /* Espacio inferior para separar de los textos */
+}
+
+.icono-zona-popup {
+    max-width: 100px; /* Ajusta el tamaño máximo de la imagen */
+    height: auto; /* Mantiene la proporción de la imagen */
+    margin-bottom: 10px; /* Espacio inferior para separar de los textos */
+}
+
+.galeria-multimedia {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Espacio entre elementos multimedia */
+}
+
+.multimedia-item {
+    max-width: 150px; /* Ajusta el tamaño máximo de las imágenes */
+}
+
+.multimedia-imagen {
+    width: 100%; /* Asegura que la imagen ocupe el contenedor */
+    height: auto; /* Mantiene la proporción de la imagen */
+}
+
+.multimedia-video {
+    width: 100%; /* Asegura que el video ocupe el contenedor */
+    height: auto; /* Mantiene la proporción del video */
+}
 </style>

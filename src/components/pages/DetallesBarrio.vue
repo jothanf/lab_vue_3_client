@@ -12,27 +12,40 @@
         <i class="fas fa-save"></i> Guardar
       </button>
     </header>
-
     <div v-if="barrio" class="contenido">
       <!-- Información Básica -->
       <section class="seccion">
-        <h2>Información Básica</h2>
+        <h2 class="titulo">Información Básica</h2>
         <div class="grid">
           <div class="campo">
-            <span class="etiqueta">Nombre:</span>
-            <input v-if="isEditing" v-model="barrioEditado.nombre" class="input" />
+            <label class="etiqueta">Nombre:</label>
+            <input 
+              v-if="isEditing" 
+              v-model="barrioEditado.nombre" 
+              class="input" 
+              placeholder="Ingrese el nombre del barrio" 
+            />
             <span v-else class="valor">{{ barrio.nombre || 'No disponible' }}</span>
           </div>
 
           <div class="campo">
-            <span class="etiqueta">Sigla:</span>
-            <input v-if="isEditing" v-model="barrioEditado.sigla" class="input" />
+            <label class="etiqueta">Sigla:</label>
+            <input 
+              v-if="isEditing" 
+              v-model="barrioEditado.sigla" 
+              class="input" 
+              placeholder="Ingrese la sigla del barrio" 
+            />
             <span v-else class="valor">{{ barrio.sigla || 'No disponible' }}</span>
           </div>
 
           <div class="campo">
-            <span class="etiqueta">Localidad:</span>
-            <select v-if="isEditing" v-model="barrioEditado.localidad" class="input">
+            <label class="etiqueta">Localidad:</label>
+            <select 
+              v-if="isEditing" 
+              v-model="barrioEditado.localidad" 
+              class="input"
+            >
               <option v-for="loc in localidades" :key="loc.id" :value="loc.id">
                 {{ loc.nombre }}
               </option>
@@ -41,21 +54,26 @@
           </div>
 
           <div class="campo">
-            <span class="etiqueta">Estrato Predominante:</span>
+            <label class="etiqueta">Estrato Predominante:</label>
             <input 
               v-if="isEditing" 
               v-model="barrioEditado.estrato_predominante" 
               type="number" 
               class="input" 
               min="1" 
-              max="6"
+              max="6" 
+              placeholder="1-6"
             />
             <span v-else class="valor">{{ barrio.estrato_predominante || 'No disponible' }}</span>
           </div>
 
           <div class="campo">
-            <span class="etiqueta">Tipo de Barrio:</span>
-            <select v-if="isEditing" v-model="barrioEditado.tipo_barrio" class="input">
+            <label class="etiqueta">Tipo de Barrio:</label>
+            <select 
+              v-if="isEditing" 
+              v-model="barrioEditado.tipo_barrio" 
+              class="input"
+            >
               <option value="residencial">Residencial</option>
               <option value="comercial">Comercial</option>
               <option value="mixta">Mixta</option>
@@ -169,6 +187,74 @@
           </form>
         </div>
       </section>
+
+      <!-- Nueva sección para Zonas de Interés -->
+      <section class="seccion">
+        <h2>Zonas de Interés</h2>
+        
+        <!-- Multiselect para agregar zonas de interés -->
+        <div v-if="isEditing">
+          <multiselect 
+            v-model="zonasSeleccionadas" 
+            :options="zonasDisponibles" 
+            :multiple="true" 
+            :taggable="true" 
+            placeholder="Seleccionar zonas de interés"
+            label="nombre" 
+            track-by="id"
+            @select="agregarZonaInteres"
+          ></multiselect>
+        </div>
+
+        <!-- Lista de zonas de interés -->
+        <div class="lista-items-zonas">
+          <div 
+            v-for="zona in barrio.zonas_de_interes" 
+            :key="zona.id" 
+            class="zona-interes-item"
+            @click="mostrarDetallesZona(zona)"
+          >
+            <img 
+              v-if="zona.icono_url" 
+              :src="zona.icono_url" 
+              :alt="zona.nombre" 
+              class="icono-zona"
+            >
+            <div class="zona-info">
+              <h3>{{ zona.nombre }}</h3>
+              <p>{{ zona.categoria }}</p>
+            </div>
+            <button 
+              v-if="isEditing"
+              @click.stop="eliminarZonaInteres(zona.id)" 
+              class="btn-eliminar"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Popup para detalles de zona -->
+      <MyPopUp 
+        :visible="popupZonaVisible" 
+        :titulo="zonaSeleccionadaDetalle?.nombre" 
+        @cerrar="cerrarPopupZona"
+      >
+        <div v-if="zonaSeleccionadaDetalle">
+          <img 
+            v-if="zonaSeleccionadaDetalle.icono_url" 
+            :src="zonaSeleccionadaDetalle.icono_url" 
+            alt="Icono de zona de interés" 
+            class="icono-zona-popup"
+          >
+          <p><strong>Categoría:</strong> {{ zonaSeleccionadaDetalle.categoria }}</p>
+          <p><strong>Descripción:</strong> {{ zonaSeleccionadaDetalle.descripcion }}</p>
+          <p v-if="zonaSeleccionadaDetalle.direccion">
+            <strong>Dirección:</strong> {{ zonaSeleccionadaDetalle.direccion }}
+          </p>
+        </div>
+      </MyPopUp>
     </div>
   </div>
 </template>
@@ -177,11 +263,15 @@
 import axios from '@/utils/axios';
 import VideoCard from '@/components/molecules/VideoCard.vue';
 import eventBus from '@/utils/eventBus';
+import MyPopUp from '@/components/molecules/MyPopUp.vue';
+import Multiselect from 'vue-multiselect';
 
 export default {
   name: 'DetallesBarrio',
   components: {
-    VideoCard
+    VideoCard,
+    MyPopUp,
+    Multiselect
   },
   data() {
     return {
@@ -206,12 +296,17 @@ export default {
         titulo: '',
         descripcion: '',
         tipo: 'foto'
-      }
+      },
+      zonasDisponibles: [],
+      zonasSeleccionadas: [],
+      popupZonaVisible: false,
+      zonaSeleccionadaDetalle: null,
     }
   },
   async created() {
     await this.cargarLocalidades();
     await this.cargarBarrio();
+    await this.cargarZonasDisponibles();
   },
   methods: {
     formatearTipoBarrio(tipo) {
@@ -249,6 +344,7 @@ export default {
     async guardarCambios() {
       try {
         const datosAEnviar = { ...this.barrioEditado };
+        console.log('Datos a enviar:', datosAEnviar);
         if (typeof datosAEnviar.localidad === 'object') {
           datosAEnviar.localidad = datosAEnviar.localidad.id;
         }
@@ -355,20 +451,223 @@ export default {
         titulo: '',
         descripcion: ''
       };
+    },
+    async cargarZonasDisponibles() {
+      try {
+        const response = await axios.get('/crm/zonasDeInteres/');
+        this.zonasDisponibles = response.data;
+        console.log('Zonas de interés cargadas:', this.zonasDisponibles);
+      } catch (error) {
+        console.error('Error al cargar zonas de interés:', error);
+      }
+    },
+    async agregarZonaInteres(zona) {
+      if (!zona) return;
+      
+      try {
+        await axios.post(`/crm/barrio/${this.barrio.id}/agregar-zona-interes/`, {
+          zona_id: zona.id
+        });
+        
+        await this.cargarBarrio();
+        this.zonasSeleccionadas = [];
+      } catch (error) {
+        console.error('Error al agregar zona de interés:', error);
+      }
+    },
+    async eliminarZonaInteres(zonaId) {
+      try {
+        await axios.delete(`/crm/barrio/${this.barrio.id}/eliminar-zona-interes/${zonaId}/`);
+        await this.cargarBarrio();
+      } catch (error) {
+        console.error('Error al eliminar zona de interés:', error);
+      }
+    },
+    mostrarDetallesZona(zona) {
+      this.zonaSeleccionadaDetalle = zona;
+      this.popupZonaVisible = true;
+    },
+    cerrarPopupZona() {
+      this.popupZonaVisible = false;
+      this.zonaSeleccionadaDetalle = null;
     }
   }
 }
 </script>
 
 <style scoped>
-/* Mantener los mismos estilos que DetallesLocalidad */
+@import 'vue-multiselect/dist/vue-multiselect.min.css';
+
+/* Estilos para la sección de detalles del barrio */
 .detalles-barrio {
   max-width: 1200px;
   margin: 0 auto;
   padding: var(--spacing-lg);
+  background-color: var(--color-white-sand-50);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
 }
 
-/* ... (resto de los estilos igual que en DetallesLocalidad) ... */
+/* Encabezado */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+
+/* Sección de contenido */
+.contenido {
+  margin-top: var(--spacing-lg);
+}
+
+/* Sección de Zonas de Interés */
+.seccion {
+  margin-bottom: var(--spacing-lg);
+}
+
+.seccion h2 {
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Estilos para el multiselect */
+.selector-zonas {
+  margin-bottom: var(--spacing-md);
+}
+
+.multiselect {
+  width: 100%;
+  border: 1px solid var(--color-mine-shaft-100);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  transition: border-color var(--transition-normal);
+}
+
+.multiselect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Lista de zonas de interés */
+.lista-items-zonas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.zona-interes-item {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-mine-shaft-100);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  transition: box-shadow var(--transition-normal);
+  position: relative; /* Para el botón de eliminar */
+}
+
+.zona-interes-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Estilos para la información de la zona */
+.zona-info {
+  flex-grow: 1;
+  margin-left: var(--spacing-sm);
+}
+
+.zona-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.zona-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-loblolly-700);
+}
+
+/* Botones de acción */
+.btn-eliminar {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  transition: color var(--transition-normal);
+  position: absolute; /* Para posicionar el botón en la esquina */
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+}
+
+.btn-eliminar:hover {
+  color: var(--color-primary);
+}
+
+/* Estilos para el popup */
+.icono-zona-popup {
+  max-width: 100px;
+  height: auto;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Alertas */
+.alert {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+}
+
+.alert-success {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.alert-error {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+/* Estilos para el formulario de edición */
+.formulario-edicion {
+  background-color: var(--color-white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.formulario-edicion h3 {
+  margin-bottom: var(--spacing-md);
+  color: var(--color-primary);
+}
+
+.form-control {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-control input,
+.form-control textarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-mine-shaft-100);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--font-league);
+  transition: border-color var(--transition-normal);
+}
+
+.form-control input:focus,
+.form-control textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
 
 /* Estilos para la sección de multimedia */
 .galeria-imagenes {
@@ -421,5 +720,13 @@ export default {
 
 .btn-submit:hover {
   background-color: var(--color-primary-dark);
+}
+
+.icono-zona {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
 }
 </style>
