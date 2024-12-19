@@ -29,13 +29,52 @@
           </div>
           <div class="campo">
             <span class="etiqueta">Tipo de Propiedad:</span>
-            <input v-if="isEditing" v-model="propiedadEditada.tipo_propiedad" class="input" />
+            <select v-if="isEditing" v-model="propiedadEditada.tipo_propiedad" class="input">
+              <option value="">Seleccione un tipo</option>
+              <option value="apartamento">Apartamento</option>
+              <option value="casa">Casa</option>
+              <option value="local">Local</option>
+              <option value="terreno">Terreno</option>
+              <!-- Agrega más opciones según sea necesario -->
+            </select>
             <span v-else class="valor">{{ propiedad.tipo_propiedad || 'No disponible' }}</span>
           </div>
           <div class="campo">
             <span class="etiqueta">Modalidad de Negocio:</span>
-            <input v-if="isEditing" v-model="propiedadEditada.modalidad_de_negocio" class="input" />
-            <span v-else class="valor">{{ propiedad.modalidad_de_negocio || 'No disponible' }}</span>
+            <div v-if="isEditing" class="checkbox-group">
+              <div class="modalidad-item">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    v-model="propiedadEditada.modalidad_de_negocio.venta_tradicional.activo"
+                  > Venta Tradicional
+                </label>
+                <input 
+                  v-if="propiedadEditada.modalidad_de_negocio.venta_tradicional.activo"
+                  type="number" 
+                  v-model="propiedadEditada.modalidad_de_negocio.venta_tradicional.precio" 
+                  placeholder="Precio Venta"
+                  class="input precio-input"
+                >
+              </div>
+
+              <div class="modalidad-item">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    v-model="propiedadEditada.modalidad_de_negocio.renta_tradicional.activo"
+                  > Renta Tradicional
+                </label>
+                <input 
+                  v-if="propiedadEditada.modalidad_de_negocio.renta_tradicional.activo"
+                  type="number" 
+                  v-model="propiedadEditada.modalidad_de_negocio.renta_tradicional.precio" 
+                  placeholder="Precio Renta"
+                  class="input precio-input"
+                >
+              </div>
+            </div>
+            <span v-else class="valor">{{ formatearModalidadNegocio(propiedad.modalidad_de_negocio) }}</span>
           </div>
         </div>
       </section>
@@ -181,11 +220,26 @@
 
       <div v-if="isEditing">
         <h3>Amenidades</h3>
-        <select v-model="propiedadEditada.amenidades" multiple class="input">
-          <option v-for="amenidad in amenidadesDisponibles" :key="amenidad.id" :value="amenidad.id">
-            {{ amenidad.nombre }} ({{ amenidad.categoria }})
-          </option>
-        </select>
+        <multiselect
+          v-model="propiedadEditada.amenidades"
+          :options="amenidadesDisponibles"
+          :multiple="true"
+          :close-on-select="false"
+          :clear-on-select="false"
+          :preserve-search="true"
+          placeholder="Seleccione amenidades"
+          label="nombre"
+          track-by="id"
+          :preselect-first="false"
+          @select="onAmenidadSelect"
+          @remove="onAmenidadRemove"
+        >
+          <template v-slot:selection="{ values, isOpen }">
+            <span class="multiselect__single" v-if="values.length && !isOpen">
+              {{ values.length }} amenidad(es) seleccionada(s)
+            </span>
+          </template>
+        </multiselect>
       </div>
     </div>
   </div>
@@ -307,17 +361,43 @@
   border: 1px dashed var(--color-border);
   border-radius: var(--border-radius-sm);
 }
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modalidad-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.precio-input {
+  width: 150px;
+}
 </style>
 
 <script>
 import axios from '@/utils/axios';
+import Multiselect from 'vue-multiselect';
 
 export default {
   name: 'DetallesDePropiedad',
+  components: {
+    Multiselect,
+  },
   data() {
     return {
       propiedad: null,
-      propiedadEditada: {},
+      propiedadEditada: {
+        modalidad_de_negocio: {
+          venta_tradicional: { activo: false, precio: '' },
+          renta_tradicional: { activo: false, precio: '' }
+        },
+        amenidades: [],
+      },
       isEditing: false,
       amenidadesDisponibles: [],
       nuevaImagen: {
@@ -325,6 +405,15 @@ export default {
         titulo: '',
         descripcion: ''
       }
+    }
+  },
+  watch: {
+    'propiedadEditada.amenidades': {
+      handler(newVal) {
+        console.log('Amenidades seleccionadas cambiaron:', newVal);
+        console.log('Cantidad de amenidades seleccionadas:', newVal?.length || 0);
+      },
+      deep: true
     }
   },
   async created() {
@@ -343,6 +432,7 @@ export default {
     } catch (error) {
       console.error('Error al cargar los detalles de la propiedad:', error);
     }
+    await this.cargarAmenidades();
   },
   mounted() {
     if (this.propiedad && this.propiedad.multimedia) {
@@ -352,8 +442,32 @@ export default {
     }
   },
   methods: {
+    onAmenidadSelect(selectedOption) {
+      console.log('Amenidad seleccionada:', selectedOption);
+      console.log('Amenidades actuales:', this.propiedadEditada.amenidades);
+    },
+    onAmenidadRemove(removedOption) {
+      console.log('Amenidad removida:', removedOption);
+      console.log('Amenidades actuales:', this.propiedadEditada.amenidades);
+    },
     activarEdicion() {
-      this.propiedadEditada = { ...this.propiedad };
+      const modalidad = this.propiedad.modalidad_de_negocio || {};
+      
+      this.propiedadEditada = { 
+        ...this.propiedad,
+        modalidad_de_negocio: {
+          venta_tradicional: {
+            activo: modalidad.venta_tradicional?.activo || false,
+            precio: modalidad.venta_tradicional?.precio || ''
+          },
+          renta_tradicional: {
+            activo: modalidad.renta_tradicional?.activo || false,
+            precio: modalidad.renta_tradicional?.precio || ''
+          }
+        },
+        amenidades: this.propiedad.amenidades ? [...this.propiedad.amenidades] : []
+      };
+      console.log('Modo edición activado. Amenidades iniciales:', this.propiedadEditada.amenidades);
       this.isEditing = true;
     },
     volver() {
@@ -361,9 +475,20 @@ export default {
     },
     async guardarCambios() {
       try {
-        // Crear una copia de los datos a enviar
         const datosActualizados = { ...this.propiedadEditada };
         
+        // Asegurarse de que los precios sean números
+        if (datosActualizados.modalidad_de_negocio) {
+          if (datosActualizados.modalidad_de_negocio.venta_tradicional?.precio) {
+            datosActualizados.modalidad_de_negocio.venta_tradicional.precio = 
+              parseInt(datosActualizados.modalidad_de_negocio.venta_tradicional.precio);
+          }
+          if (datosActualizados.modalidad_de_negocio.renta_tradicional?.precio) {
+            datosActualizados.modalidad_de_negocio.renta_tradicional.precio = 
+              parseInt(datosActualizados.modalidad_de_negocio.renta_tradicional.precio);
+          }
+        }
+
         // Asegurarse de que los campos numéricos sean números
         const camposNumericos = [
           'metro_cuadrado_construido',
@@ -381,22 +506,39 @@ export default {
           }
         });
 
-        // Eliminar campos que no deberían enviarse
-        delete datosActualizados.multimedia;
-        delete datosActualizados.amenidades;
+        console.log('Preparando datos para guardar...');
+        console.log('Amenidades antes de procesar:', this.propiedadEditada.amenidades);
+        
+        if (this.propiedadEditada.amenidades?.length > 0) {
+          datosActualizados.amenidades_ids = this.propiedadEditada.amenidades.map(a => {
+            const id = typeof a === 'object' ? a.id : a;
+            console.log(`Procesando amenidad: ${JSON.stringify(a)} -> ID: ${id}`);
+            return id;
+          });
+          
+          console.log('IDs de amenidades preparados para enviar:', datosActualizados.amenidades_ids);
+          delete datosActualizados.amenidades;
+        } else {
+          console.warn('No hay amenidades seleccionadas para guardar');
+          datosActualizados.amenidades_ids = [];
+        }
+
+        console.log('Datos completos a enviar al backend:', datosActualizados);
 
         const response = await axios.put(
           `/crm/propiedades/${this.$route.params.id}/`,
           datosActualizados
         );
 
+        console.log('Respuesta del backend:', response.data);
+        
         // Actualizar los datos locales
         this.propiedad = response.data;
         this.isEditing = false;
 
       } catch (error) {
         console.error('Error al guardar los cambios:', error);
-        // Aquí podrías agregar una notificación al usuario
+        console.error('Detalles del error:', error.response?.data || error.message);
       }
     },
     formatFecha(fecha) {
@@ -474,7 +616,31 @@ export default {
         return `http://localhost:8000${url}`;
       }
       return url;
-    }
+    },
+    formatearModalidadNegocio(modalidad) {
+      if (!modalidad) return 'No disponible';
+      
+      const modalidades = [];
+      
+      if (modalidad.venta_tradicional.activo) {
+        modalidades.push(`Venta Tradicional: $${modalidad.venta_tradicional.precio}`);
+      }
+      
+      if (modalidad.renta_tradicional.activo) {
+        modalidades.push(`Renta Tradicional: $${modalidad.renta_tradicional.precio}`);
+      }
+      
+      return modalidades.length > 0 ? modalidades.join(', ') : 'No disponible';
+    },
+    async cargarAmenidades() {
+      try {
+        const response = await axios.get('/crm/amenidades/');
+        this.amenidadesDisponibles = response.data;
+        console.log('Amenidades disponibles cargadas:', this.amenidadesDisponibles);
+      } catch (error) {
+        console.error('Error al cargar amenidades:', error);
+      }
+    },
   }
 }
 </script>
