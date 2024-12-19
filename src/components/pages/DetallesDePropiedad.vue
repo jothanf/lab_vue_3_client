@@ -175,7 +175,8 @@
         <h2>Amenidades</h2>
         <div v-if="propiedad.amenidades">
           <ul>
-            <li v-for="amenidad in propiedad.amenidades" :key="amenidad.id">
+            <li v-for="amenidad in propiedad.amenidades" :key="amenidad.id" class="amenidad-item">
+              <img :src="getFullImageUrl(amenidad.icono)" alt="Ícono de amenidad" class="icono-amenidad" />
               {{ amenidad.nombre }} - {{ amenidad.descripcion }}
             </li>
           </ul>
@@ -330,6 +331,12 @@
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+
+.icono-amenidad {
+  width: 20px; /* Ajusta el tamaño según sea necesario */
+  height: 20px; /* Ajusta el tamaño según sea necesario */
+  margin-right: 5px; /* Espacio entre el ícono y el nombre */
 }
 
 .galeria-imagenes {
