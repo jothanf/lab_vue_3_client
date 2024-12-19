@@ -76,6 +76,20 @@
             </div>
             <span v-else class="valor">{{ formatearModalidadNegocio(propiedad.modalidad_de_negocio) }}</span>
           </div>
+          <div class="campo">
+            <span class="etiqueta">Edificio:</span>
+            <select v-if="isEditing" v-model="propiedadEditada.edificio" class="input">
+              <option value="">Seleccione un edificio</option>
+              <option v-for="edificio in edificiosDisponibles" :key="edificio.id" :value="edificio.id">
+                {{ edificio.nombre }}
+              </option>
+            </select>
+            <span v-else class="valor">{{ propiedad.edificio?.nombre || 'No disponible' }}</span>
+          </div>
+          <div class="campo">
+            <span class="etiqueta">Dirección:</span>
+            <span class="valor">{{ propiedad.direccion?.direccion || 'No disponible' }}</span>
+          </div>
         </div>
       </section>
 
@@ -334,9 +348,9 @@
 }
 
 .icono-amenidad {
-  width: 20px; /* Ajusta el tamaño según sea necesario */
-  height: 20px; /* Ajusta el tamaño según sea necesario */
-  margin-right: 5px; /* Espacio entre el ícono y el nombre */
+  width: 20px; 
+  height: 20px; 
+  margin-right: 5px; 
 }
 
 .galeria-imagenes {
@@ -430,6 +444,7 @@ export default {
       console.log('Respuesta de la API:', response.data);
       this.propiedad = response.data.propiedad;
       this.amenidadesDisponibles = response.data.amenidades_disponibles;
+      this.edificiosDisponibles = response.data.edificios_disponibles;
       
       if (this.propiedad?.multimedia) {
         this.propiedad.multimedia.forEach(media => {
