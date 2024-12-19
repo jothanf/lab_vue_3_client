@@ -48,9 +48,9 @@
       </div>
     </div>
 
-    <!-- Tiempo de estadía -->
+    <!-- Tiempo de estadía (solo si renta está seleccionado) -->
     <div class="form-group" v-if="form.tipo_negocio.renta">
-      <label for="tiempo_estadia">Tiempo de estadía (meses):</label>
+      <label for="tiempo_estadia">Tiempo de estadía (meses)*:</label>
       <input 
         type="number" 
         id="tiempo_estadia" 
@@ -166,24 +166,28 @@ const registrarRequerimiento = async () => {
       return;
     }
 
-    const tipo_negocio = {
-      compra: form.value.tipo_negocio.compra,
-      renta: form.value.tipo_negocio.renta
-    };
-
     const dataToSend = {
-      ...form.value,
-      agente: agenteId,
-      tipo_negocio: tipo_negocio,
+      cliente: form.value.cliente,
+      tipo_negocio: {
+        compra: form.value.tipo_negocio.compra,
+        renta: form.value.tipo_negocio.renta
+      },
+      tiempo_estadia: form.value.tipo_negocio.renta ? Number(form.value.tiempo_estadia) : null,
       presupuesto_minimo: Number(form.value.presupuesto_minimo),
       presupuesto_maximo: Number(form.value.presupuesto_maximo),
-      tiempo_estadia: form.value.tipo_negocio.renta ? Number(form.value.tiempo_estadia) : null
+      agente: agenteId,
+      estado: 'pendiente',
+      habitantes: Number(form.value.habitantes) || 0
     };
 
     console.log('Datos a enviar:', dataToSend);
 
-    await axios.post('/crm/requerimientos/', dataToSend);
-    showSuccess('¡Pedido registrado exitosamente!');
+    const response = await axios.post('/crm/requerimientos/', dataToSend);
+    
+    if (response.data) {
+      showSuccess('¡Pedido registrado exitosamente!');
+      emit('pedido-created', response.data);
+    }
 
   } catch (error) {
     console.error('Error al registrar requerimiento:', error);
@@ -219,9 +223,14 @@ const fetchClientes = async () => {
 };
 
 const updateTipoNegocio = () => {
-  // Resetea el tiempo de estadía si no se está alquilando
+  // Si se desmarca renta, limpiar tiempo de estadía
   if (!form.value.tipo_negocio.renta) {
     form.value.tiempo_estadia = null;
+  }
+  
+  // Validar que al menos uno esté seleccionado
+  if (!form.value.tipo_negocio.compra && !form.value.tipo_negocio.renta) {
+    showError('Debe seleccionar al menos un tipo de negocio');
   }
 };
 
