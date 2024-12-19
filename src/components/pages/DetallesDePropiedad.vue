@@ -510,7 +510,12 @@ export default {
     async guardarCambios() {
       try {
         const datosActualizados = { ...this.propiedadEditada };
-        
+
+        // Asegúrate de que el propietario solo tenga el ID
+        if (datosActualizados.propietario) {
+          datosActualizados.propietario = datosActualizados.propietario.id; // Solo enviar el ID
+        }
+
         // Asegurarse de que los precios sean números
         if (datosActualizados.modalidad_de_negocio) {
           if (datosActualizados.modalidad_de_negocio.venta_tradicional?.precio) {
