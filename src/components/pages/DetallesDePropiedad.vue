@@ -81,14 +81,15 @@
             <select v-if="isEditing" v-model="propiedadEditada.edificio" class="input">
               <option value="">Seleccione un edificio</option>
               <option v-for="edificio in edificiosDisponibles" :key="edificio.id" :value="edificio.id">
-                {{ edificio.nombre }}
+                Nombre: {{ edificio.nombre }} - Dirección: {{ edificio.direccion || 'Dirección no disponible' }}
               </option>
             </select>
-            <span v-else class="valor">{{ propiedad.edificio?.nombre || 'No disponible' }}</span>
+            <span v-else class="valor">Nombre: {{ propiedad.edificio?.nombre || 'No disponible' }} - Dirección: {{ propiedad.edificio?.direccion || 'Dirección no disponible' }}</span>
           </div>
           <div class="campo">
             <span class="etiqueta">Dirección:</span>
-            <span class="valor">{{ propiedad.direccion?.direccion || 'No disponible' }}</span>
+            <input v-if="isEditing" v-model="propiedadEditada.direccion.direccion" class="input" />
+            <span v-else class="valor">{{ propiedad.direccion?.direccion || 'No disponible' }}</span>
           </div>
         </div>
       </section>
@@ -487,9 +488,20 @@ export default {
             precio: modalidad.renta_tradicional?.precio || ''
           }
         },
+        edificio: this.propiedad.edificio ? this.propiedad.edificio.id : null,
+        direccion: this.propiedad.direccion || {
+          direccion: '',
+          datos_adicionales: {
+            interior: '',
+            torre: '',
+            apartamento: ''
+          },
+          coordenada_1: '',
+          coordenada_2: ''
+        },
         amenidades: this.propiedad.amenidades ? [...this.propiedad.amenidades] : []
       };
-      console.log('Modo edición activado. Amenidades iniciales:', this.propiedadEditada.amenidades);
+      console.log('Modo edición activado. Edificio inicial:', this.propiedadEditada.edificio);
       this.isEditing = true;
     },
     volver() {
