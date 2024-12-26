@@ -6,10 +6,10 @@
       <div class="buttons-container">
         <div class="buttons-sub-container">
           <button @click="showAmenidadesForm = true" class="btn btn-primary">
-            Agregar Amenidad
+            Agregar Caracteristica Propiedad Horizontal
           </button>
           <button @click="showAmenidadesList = true" class="btn btn-primary">
-            Ver Amenidades
+            Ver Caracteristicas Propiedad Horizontal
           </button>
         </div>
         <div class="buttons-sub-container">
@@ -21,11 +21,11 @@
           </button>
         </div>
         <div class="buttons-sub-container">
-          <button @click="showZonasDeInteresForm = true" class="btn btn-primary">
-            Agregar Zona de Interés
+          <button @click="showEdificiosForm = true" class="btn btn-primary">
+            Crear Edificio
           </button>
-          <button @click="showZonasDeInteresList = true" class="btn btn-primary">
-            Ver Zonas de Interés
+          <button @click="showEdificiosList = true" class="btn btn-primary">
+            Ver Edificios
           </button>
         </div>
       </div>
@@ -56,11 +56,11 @@
           </button>
         </div>
         <div class="buttons-sub-container">
-          <button @click="showEdificiosForm = true" class="btn btn-primary">
-            Crear Edificio
+          <button @click="showZonasDeInteresForm = true" class="btn btn-primary">
+            Agregar Zona de Interés
           </button>
-          <button @click="showEdificiosList = true" class="btn btn-primary">
-            Ver Edificios
+          <button @click="showZonasDeInteresList = true" class="btn btn-primary">
+            Ver Zonas de Interés
           </button>
         </div>
       </div>
@@ -97,6 +97,12 @@
           <button @click="showTareasList = true" class="btn btn-primary">
             Ver Tareas
           </button>
+        </div>
+        <div class="buttons-sub-container">
+          <button @click="showProspectarPropiedadForm = true" class="btn btn-primary">
+            Prospectar Propiedad
+          </button>
+    
         </div>
       </div>
 
@@ -187,6 +193,10 @@
       <MyPopUp :visible="showTareasList" @cerrar="showTareasList = false" titulo="Ver Tareas" class="popup-large">
         <TareaList @tarea-list="handleTareaList" />
       </MyPopUp>
+
+      <MyPopUp :visible="showProspectarPropiedadForm" @cerrar="showProspectarPropiedadForm = false" titulo="Prospectar Propiedad" class="popup-large">
+        <ProspectarPropiedad @prospectar-propiedad="handleProspectarPropiedad" />
+      </MyPopUp>
     </div>
   </div>
 </template>
@@ -216,6 +226,7 @@ import PedidosForm from '@/components/organisms/adminForms/PedidosForm.vue';
 import PedidosList from '@/components/organisms/adminForms/PedidosList.vue';
 import TareaForm from '@/components/organisms/adminForms/TareaForm.vue';
 import TareaList from '@/components/organisms/adminForms/TareasList.vue';
+import ProspectarPropiedad from '@/components/organisms/adminForms/ProspectarPropiedad.vue';
 
 const showAmenidadesForm = ref(false);
 const showAmenidadesList = ref(false);
@@ -239,6 +250,8 @@ const showPedidosForm = ref(false);
 const showPedidosList = ref(false);
 const showTareaForm = ref(false);
 const showTareasList = ref(false);
+const showProspectarPropiedadForm = ref(false);
+
 function handleAmenidadCreated(amenidad) {
     console.log('Amenidad creada:', amenidad);
     showAmenidadesForm.value = false; 
@@ -349,6 +362,11 @@ function handleTareaList(tareaList) {
     showTareasList.value = false; 
 }
 
+function handleProspectarPropiedad(prospectarPropiedad) {
+    console.log('Prospectar Propiedad:', prospectarPropiedad);
+    showProspectarPropiedadForm.value = false; 
+}
+
 </script>
 
 <style scoped>
@@ -367,7 +385,7 @@ function handleTareaList(tareaList) {
 
 .buttons-container {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   margin: var(--spacing-lg) 0;
 }

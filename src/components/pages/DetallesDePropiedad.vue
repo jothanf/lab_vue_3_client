@@ -181,8 +181,27 @@
       <!-- Descripción -->
       <section class="seccion">
         <h2>Descripción</h2>
-        <textarea v-if="isEditing" v-model="propiedadEditada.descripcion" class="input descripcion"></textarea>
-        <p v-else class="descripcion">{{ propiedad.descripcion || 'Sin descripción disponible' }}</p>
+        <div class="descripcion-container">
+          <div v-if="isEditing">
+            <textarea 
+              v-model="propiedadEditada.descripcion" 
+              class="input descripcion"
+              rows="5"
+            ></textarea>
+            
+            <button 
+              @click="generarDescripcionIA" 
+              class="btn btn-secondary mt-2"
+              :disabled="generandoDescripcion"
+            >
+              <i class="fas fa-robot"></i> 
+              {{ generandoDescripcion ? 'Generando...' : 'Sugerir descripción con IA' }}
+            </button>
+          </div>
+          <p v-else class="descripcion">
+            {{ propiedad.descripcion || 'Sin descripción disponible' }}
+          </p>
+        </div>
       </section>
 
       <!-- Amenidades -->
@@ -399,6 +418,27 @@
 .precio-input {
   width: 150px;
 }
+
+.descripcion-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.descripcion {
+  min-height: 100px;
+  white-space: pre-wrap;
+}
+
+.input.descripcion {
+  width: 100%;
+  min-height: 150px;
+  padding: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
 </style>
 
 <script>
@@ -426,7 +466,8 @@ export default {
         archivo: null,
         titulo: '',
         descripcion: ''
-      }
+      },
+      generandoDescripcion: false,
     }
   },
   watch: {
@@ -680,6 +721,24 @@ export default {
         console.error('Error al cargar amenidades:', error);
       }
     },
+    async generarDescripcionIA() {
+      try {
+        this.generandoDescripcion = true;
+        const response = await axios.post(
+          `/crm/propiedades/${this.$route.params.id}/generate_ai_description/`
+        );
+        
+        if (response.data.description) {
+          // Actualizar directamente el campo de descripción en el modo edición
+          this.propiedadEditada.descripcion = response.data.description;
+        }
+      } catch (error) {
+        console.error('Error al generar descripción:', error);
+        alert('No se pudo generar la descripción');
+      } finally {
+        this.generandoDescripcion = false;
+      }
+    }
   }
 }
 </script>

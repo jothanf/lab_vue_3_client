@@ -42,7 +42,7 @@
           <div class="campo">
             <span class="etiqueta">Tipo de Negocio:</span>
             <input v-if="isEditing" v-model="requerimientoEditado.tipo_negocio" class="input" />
-            <span v-else class="valor">{{ requerimiento.tipo_negocio }}</span>
+            <span v-else class="valor">{{ formatearTipoNegocio(requerimiento.tipo_negocio) }}</span>
           </div>
           <div class="campo">
             <span class="etiqueta">Habitantes:</span>
@@ -173,6 +173,34 @@ export default {
     formatearNumero(numero) {
       return numero ? numero.toLocaleString('es-CO') : '0';
     },
+    formatearTipoNegocio(tipoNegocio) {
+      try {
+        // Si el tipo de negocio es un string (JSON), parsearlo
+        const negocio = typeof tipoNegocio === 'string' ? JSON.parse(tipoNegocio) : tipoNegocio;
+        
+        const tipos = [];
+        
+        // Verificar cada tipo de negocio
+        if (negocio.compra === true) {
+          tipos.push('Compra');
+        }
+        if (negocio.renta === true) {
+          tipos.push('Renta');
+        }
+        
+        // Si no hay tipos seleccionados
+        if (tipos.length === 0) {
+          return 'No especificado';
+        }
+        
+        // Unir los tipos con comas
+        return tipos.join(' y ');
+        
+      } catch (error) {
+        console.error('Error al formatear tipo de negocio:', error);
+        return 'Formato no válido';
+      }
+    }
   }
 }
 </script>

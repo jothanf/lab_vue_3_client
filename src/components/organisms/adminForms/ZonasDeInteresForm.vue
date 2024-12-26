@@ -30,6 +30,7 @@
         >
           <option value="">Seleccione una categoría</option>
           <option value="parque">Parque</option>
+          <option value="edificio">Bulevar</option>
           <option value="museo">Museo</option>
           <option value="restaurante">Restaurante</option>
           <option value="monumento">Monumento</option>
