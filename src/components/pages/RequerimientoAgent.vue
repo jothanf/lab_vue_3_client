@@ -105,12 +105,24 @@ export default {
         console.log(`Agente detectado con ID: ${this.agenteId}`);
       }
       
-     
+      // Si no hay tipo de usuario definido o hay un problema con los IDs, usar valores por defecto
+      if (!this.clienteId) {
+        this.clienteId = 29; // Valor por defecto
+        console.log(`Usando cliente ID por defecto: ${this.clienteId}`);
+      }
+      
+      if (!this.agenteId) {
+        this.agenteId = 12; // Valor por defecto
+        console.log(`Usando agente ID por defecto: ${this.agenteId}`);
+      }
       
       // Log para depuración
       console.log(`Valores finales - Tipo: ${userType}, Cliente ID: ${this.clienteId}, Agente ID: ${this.agenteId}`);
     } catch (error) {
       console.error("Error al recuperar datos de usuario:", error);
+      // Usar valores predeterminados en caso de error
+      this.clienteId = 29;
+      this.agenteId = 12;
     }
   },
   mounted() {
