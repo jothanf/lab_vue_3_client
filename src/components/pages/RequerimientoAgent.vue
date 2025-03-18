@@ -9,17 +9,34 @@
           <div class="message-content">
             <div v-if="message.from === 'agent' && message.tipo === 'resumen'" class="resumen">
               <p>{{ message.mensaje }}</p>
-              <div class="resumen-content">
+              <div class="resumen-content" v-if="!isEditing">
                 {{ message.resumen }}
               </div>
-              <div class="confirmation-buttons" v-if="message.requiere_confirmacion">
+              <div class="resumen-editor" v-else>
+                <textarea 
+                  v-model="editedResumen" 
+                  class="resumen-textarea"
+                  rows="10"
+                ></textarea>
+              </div>
+              <div class="confirmation-buttons" v-if="message.requiere_confirmacion && !isEditing && !isProcessingConfirmation && !requerimientoEnviado">
                 <button @click="confirmarResumen(true)" class="confirm-button">Confirmar</button>
-                <button @click="confirmarResumen(false)" class="deny-button">Modificar</button>
+                <button @click="editarResumen(message)" class="edit-button">Editar</button>
+              </div>
+              <div class="confirmation-buttons" v-if="isEditing && !isProcessingConfirmation && !requerimientoEnviado">
+                <button @click="guardarEdicion()" class="confirm-button">Guardar cambios</button>
+                <button @click="cancelarEdicion()" class="deny-button">Cancelar</button>
+              </div>
+              <div class="processing-message" v-if="isProcessingConfirmation">
+                <p>Procesando solicitud...</p>
+              </div>
+              <div class="success-message" v-if="requerimientoEnviado">
+                <p>¡Requerimiento registrado con éxito!</p>
               </div>
             </div>
             <div v-else-if="message.from === 'agent' && message.tipo === 'reinicio'">
               <p>{{ message.mensaje }}</p>
-              <div class="modification-options">
+              <div class="modification-options" v-if="!requerimientoEnviado">
                 <button @click="modificarAspectos('todos')" class="option-button">Reiniciar todos</button>
                 <input v-model="aspectosModificar" placeholder="aspecto1, aspecto2, ..." class="aspectos-input" />
                 <button @click="modificarAspectos(aspectosModificar)" class="option-button">Modificar seleccionados</button>
@@ -37,12 +54,12 @@
           v-model="userInput" 
           @keyup.enter="sendMessage" 
           placeholder="Escribe tu mensaje aquí..." 
-          :disabled="isWaitingConfirmation || isTyping"
+          :disabled="isWaitingConfirmation || isTyping || isEditing || isProcessingConfirmation || requerimientoEnviado"
           class="user-input"
         />
         <button 
           @click="sendMessage" 
-          :disabled="isWaitingConfirmation || !userInput || isTyping"
+          :disabled="isWaitingConfirmation || !userInput || isTyping || isEditing || isProcessingConfirmation || requerimientoEnviado"
           class="send-button"
         >
           Enviar
@@ -64,6 +81,11 @@ export default {
       isTyping: false,
       isWaitingConfirmation: false,
       aspectosModificar: '',
+      isEditing: false,
+      editedResumen: '',
+      currentResumenMessage: null,
+      isProcessingConfirmation: false,
+      requerimientoEnviado: false
     };
   },
   mounted() {
@@ -98,7 +120,7 @@ export default {
     },
     
     async sendMessage() {
-      if (!this.userInput.trim() || this.isTyping) return;
+      if (!this.userInput.trim() || this.isTyping || this.requerimientoEnviado) return;
       
       const userMessage = this.userInput;
       this.messages.push({
@@ -141,8 +163,10 @@ export default {
     },
     
     async confirmarResumen(confirmacion) {
-      this.isTyping = true;
+      // Bloquear botones inmediatamente
+      this.isProcessingConfirmation = true;
       this.isWaitingConfirmation = false;
+      this.isTyping = true;
       
       try {
         const response = await axios.post('/crm/requerimientoAgent/', {
@@ -156,12 +180,10 @@ export default {
           tipo: response.data.tipo
         });
         
-        if (response.data.tipo === 'reinicio') {
-          // Si es reinicio, mostrar opciones de modificación
-          this.isWaitingConfirmation = true;
-        } else if (response.data.exito === true) {
-          // Si se registró con éxito, mostrar el ID
+        // Si se registró con éxito, mostrar el ID y marcar como enviado
+        if (response.data.exito === true) {
           this.messages[this.messages.length - 1].mensaje += ` ID: ${response.data.id}`;
+          this.requerimientoEnviado = true;
         }
       } catch (error) {
         console.error('Error al confirmar resumen:', error);
@@ -170,13 +192,15 @@ export default {
           mensaje: 'Lo siento, ha ocurrido un error al confirmar tu resumen.',
           tipo: 'error'
         });
-        this.isWaitingConfirmation = false;
       } finally {
         this.isTyping = false;
+        this.isProcessingConfirmation = false;
       }
     },
     
     async modificarAspectos(aspectos) {
+      if (this.requerimientoEnviado) return;
+      
       this.isTyping = true;
       this.isWaitingConfirmation = false;
       
@@ -203,6 +227,71 @@ export default {
         });
       } finally {
         this.isTyping = false;
+      }
+    },
+    
+    // Métodos para edición de resumen
+    editarResumen(message) {
+      if (this.requerimientoEnviado) return;
+      
+      this.isEditing = true;
+      this.editedResumen = message.resumen;
+      this.currentResumenMessage = message;
+      this.scrollToBottom();
+    },
+    
+    cancelarEdicion() {
+      this.isEditing = false;
+      this.editedResumen = '';
+      this.currentResumenMessage = null;
+    },
+    
+    async guardarEdicion() {
+      if (!this.editedResumen.trim() || this.requerimientoEnviado) return;
+      
+      // Bloquear botones inmediatamente
+      this.isProcessingConfirmation = true;
+      this.isTyping = true;
+      this.isEditing = false;
+      
+      try {
+        // Actualizar el mensaje actual con el resumen editado
+        if (this.currentResumenMessage) {
+          this.currentResumenMessage.resumen = this.editedResumen;
+        }
+        
+        // Enviar una confirmación con el resumen editado directamente
+        const confirmationResponse = await axios.post('/crm/requerimientoAgent/', {
+          action: 'confirmar',
+          confirmacion: true,
+          // El backend no procesará este campo, pero lo incluimos para visualización
+          resumen_editado: this.editedResumen
+        });
+        
+        // Agregar mensaje de respuesta
+        this.messages.push({
+          from: 'agent',
+          mensaje: confirmationResponse.data.mensaje,
+          tipo: confirmationResponse.data.tipo
+        });
+        
+        // Si se registró con éxito, mostrar el ID y marcar como enviado
+        if (confirmationResponse.data.exito === true) {
+          this.messages[this.messages.length - 1].mensaje += ` ID: ${confirmationResponse.data.id}`;
+          this.requerimientoEnviado = true;
+        }
+        
+      } catch (error) {
+        console.error('Error al guardar la edición:', error);
+        this.messages.push({
+          from: 'agent',
+          mensaje: 'Lo siento, ha ocurrido un error al procesar tu edición.',
+          tipo: 'error'
+        });
+      } finally {
+        this.isTyping = false;
+        this.currentResumenMessage = null;
+        this.isProcessingConfirmation = false;
       }
     },
     
@@ -288,6 +377,21 @@ export default {
   white-space: pre-line;
 }
 
+.resumen-editor {
+  margin-top: 10px;
+}
+
+.resumen-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #007bff;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+  resize: vertical;
+}
+
 .confirmation-buttons, .modification-options {
   display: flex;
   gap: 10px;
@@ -302,6 +406,25 @@ export default {
   padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirm-button:hover {
+  background-color: #218838;
+}
+
+.edit-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+  background-color: #0069d9;
 }
 
 .deny-button {
@@ -311,6 +434,11 @@ export default {
   padding: 8px 15px;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deny-button:hover {
+  background-color: #c82333;
 }
 
 .aspectos-input {
@@ -349,5 +477,22 @@ export default {
 .send-button:disabled, .user-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.processing-message {
+  margin-top: 15px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.success-message {
+  margin-top: 15px;
+  color: #28a745;
+  font-weight: bold;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 5px;
+  padding: 10px;
+  text-align: center;
 }
 </style>
