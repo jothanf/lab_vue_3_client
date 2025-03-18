@@ -85,8 +85,33 @@ export default {
       editedResumen: '',
       currentResumenMessage: null,
       isProcessingConfirmation: false,
-      requerimientoEnviado: false
+      requerimientoEnviado: false,
+      clienteId: null,
+      agenteId: null
     };
+  },
+  created() {
+    // Recuperar datos correctamente del localStorage
+    try {
+      // Obtener el tipo de usuario
+      const userType = localStorage.getItem('user_type');
+      
+      // Dependiendo del tipo de usuario, obtener el ID
+      if (userType === 'cliente') {
+        this.clienteId = localStorage.getItem('cliente_id');
+        console.log(`Cliente detectado con ID: ${this.clienteId}`);
+      } else if (userType === 'agente') {
+        this.agenteId = localStorage.getItem('agente_id');
+        console.log(`Agente detectado con ID: ${this.agenteId}`);
+      }
+      
+     
+      
+      // Log para depuración
+      console.log(`Valores finales - Tipo: ${userType}, Cliente ID: ${this.clienteId}, Agente ID: ${this.agenteId}`);
+    } catch (error) {
+      console.error("Error al recuperar datos de usuario:", error);
+    }
   },
   mounted() {
     this.iniciarConversacion();
@@ -98,8 +123,11 @@ export default {
     async iniciarConversacion() {
       this.isTyping = true;
       try {
+        console.log(`Iniciando conversación con Cliente ID: ${this.clienteId}, Agente ID: ${this.agenteId}`);
         const response = await axios.post('/crm/requerimientoAgent/', {
-          action: 'iniciar'
+          action: 'iniciar',
+          cliente_id: parseInt(this.clienteId, 10), // Convertir a número para asegurar compatibilidad
+          agente_id: parseInt(this.agenteId, 10)
         });
         
         this.messages.push({
