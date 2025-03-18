@@ -1,6 +1,6 @@
 <template>
-  <form @submit.prevent="registerAgent">
-    <h2>Registro de Agente</h2>
+  <form @submit.prevent="registerCliente">
+    <h2>Registro de Cliente</h2>
     <!-- Datos de Usuario -->
     <InputField
       id="email"
@@ -8,7 +8,6 @@
       type="email"
       v-model="form.email"
       required
-      @input="updateUsername"
     />
   
     <InputField
@@ -18,25 +17,35 @@
       v-model="form.password"
       required
     />
-    <InputField
-      id="first_name"
-      label="Nombre"
-      v-model="form.first_name"
-      required
-    />
-    <InputField
-      id="last_name"
-      label="Apellido"
-      v-model="form.last_name"
-      required
-    />
     
-    <!-- Datos de Agente -->
+    <!-- Datos de Cliente -->
+    <InputField
+      id="nombre"
+      label="Nombre"
+      v-model="form.nombre"
+      required
+    />
+    <InputField
+      id="apellidos"
+      label="Apellidos"
+      v-model="form.apellidos"
+      required
+    />
     <InputField
       id="telefono"
       label="Teléfono"
       v-model="form.telefono"
       required
+    />
+    <InputField
+      id="telefono_secundario"
+      label="Teléfono Secundario (opcional)"
+      v-model="form.telefono_secundario"
+    />
+    <InputField
+      id="cedula"
+      label="Cédula (opcional)"
+      v-model="form.cedula"
     />
 
     <div v-if="error" class="message error-message">
@@ -63,19 +72,22 @@ import InputField from '@/components/atoms/Input.vue';
 import axios from 'axios';
 
 export default {
-  name: 'AgentRegistrationForm',
+  name: 'ClienteRegistrationForm',
   components: {
     InputField
   },
   data() {
     return {
       form: {
-        username: '',
-        password: '',
-        first_name: '',
-        last_name: '',
         email: '',
-        telefono: ''
+        password: '',
+        nombre: '',
+        apellidos: '',
+        telefono: '',
+        telefono_secundario: '',
+        cedula: '',
+        canal_ingreso: 'web', // Por defecto, el canal de ingreso es web
+        estado_del_cliente: 'activo' // Por defecto, el estado es activo
       },
       loading: false,
       error: null,
@@ -85,9 +97,6 @@ export default {
     };
   },
   methods: {
-    updateUsername() {
-      this.form.username = this.form.email;
-    },
     validateForm() {
       if (!this.form.email) {
         this.showError('Por favor, ingrese un correo electrónico válido');
@@ -97,12 +106,12 @@ export default {
         this.showError('La contraseña debe tener al menos 6 caracteres');
         return false;
       }
-      if (!this.form.first_name) {
+      if (!this.form.nombre) {
         this.showError('Por favor, ingrese su nombre');
         return false;
       }
-      if (!this.form.last_name) {
-        this.showError('Por favor, ingrese su apellido');
+      if (!this.form.apellidos) {
+        this.showError('Por favor, ingrese sus apellidos');
         return false;
       }
       if (!this.form.telefono) {
@@ -123,8 +132,8 @@ export default {
       this.formattedResponse = message;
       this.responseMessage = true;
     },
-    async registerAgent() {
-      console.log("Iniciando registro de agente:", this.form);
+    async registerCliente() {
+      console.log("Iniciando registro de cliente:", this.form);
 
       if (!this.validateForm()) {
         return;
@@ -134,20 +143,34 @@ export default {
       this.responseMessage = false;
       
       try {
-        const response = await axios.post('http://localhost:8000/accounts/agente/', {
-          user: {
-            username: this.form.email,
-            email: this.form.email,
-            password: this.form.password,
-            first_name: this.form.first_name,
-            last_name: this.form.last_name
-          },
-          telefono: this.form.telefono
+        console.log("URL de registro:", 'http://localhost:8000/accounts/cliente/register/');
+        console.log("Datos a enviar:", {
+          email: this.form.email,
+          password: this.form.password,
+          nombre: this.form.nombre,
+          apellidos: this.form.apellidos,
+          telefono: this.form.telefono,
+          telefono_secundario: this.form.telefono_secundario,
+          cedula: this.form.cedula,
+          canal_ingreso: this.form.canal_ingreso,
+          estado_del_cliente: this.form.estado_del_cliente
+        });
+
+        const response = await axios.post('http://localhost:8000/accounts/cliente/register/', {
+          email: this.form.email,
+          password: this.form.password,
+          nombre: this.form.nombre,
+          apellidos: this.form.apellidos,
+          telefono: this.form.telefono,
+          telefono_secundario: this.form.telefono_secundario,
+          cedula: this.form.cedula,
+          canal_ingreso: this.form.canal_ingreso,
+          estado_del_cliente: this.form.estado_del_cliente
         });
 
         console.log("Respuesta exitosa:", response.data);
         
-        this.showSuccess(`¡Registro exitoso! El agente ${this.form.first_name} ${this.form.last_name} ha sido registrado.`);
+        this.showSuccess(`¡Registro exitoso! ${this.form.nombre} ${this.form.apellidos} ha sido registrado como cliente.`);
         
         setTimeout(() => {
           if (this.isSuccess) {
@@ -163,12 +186,10 @@ export default {
         if (error.response) {
           console.error("Detalles del error:", error.response.data);
           
-          if (error.response.data.user?.email) {
+          if (error.response.data.email) {
             errorMessage = 'Este correo electrónico ya está registrado';
-          } else if (error.response.data.user?.username) {
-            errorMessage = 'Este nombre de usuario ya está en uso';
-          } else if (error.response.data.user?.password) {
-            errorMessage = 'La contraseña no cumple con los requisitos';
+          } else if (error.response.data.cedula) {
+            errorMessage = 'Esta cédula ya está registrada';
           } else if (error.response.data.error) {
             errorMessage = error.response.data.error;
           }
@@ -181,12 +202,15 @@ export default {
     },
     resetForm() {
       this.form = {
-        username: '',
-        password: '',
-        first_name: '',
-        last_name: '',
         email: '',
-        telefono: ''
+        password: '',
+        nombre: '',
+        apellidos: '',
+        telefono: '',
+        telefono_secundario: '',
+        cedula: '',
+        canal_ingreso: 'web',
+        estado_del_cliente: 'activo'
       };
     }
   }
@@ -259,4 +283,3 @@ button:hover:not(:disabled) {
   }
 }
 </style>
-

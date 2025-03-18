@@ -103,12 +103,25 @@ export default {
         if (response.data.token) {
           localStorage.setItem('token', `Bearer ${response.data.token}`);
           localStorage.setItem('user', JSON.stringify(response.data.user));
-          localStorage.setItem('role', response.data.role);
+          
+          // Guardar información adicional según el tipo de usuario
+          if (response.data.user_type === 'agente') {
+            localStorage.setItem('role', response.data.role);
+            localStorage.setItem('user_type', 'agente');
+            localStorage.setItem('agente_id', response.data.agente_id);
+          } else if (response.data.user_type === 'cliente') {
+            localStorage.setItem('user_type', 'cliente');
+            localStorage.setItem('cliente_id', response.data.cliente_id);
+          }
           
           this.showSuccess('¡Inicio de sesión exitoso!');
           
-          // Emitir evento de login exitoso
-          this.$emit('login-success', { user: response.data.user, role: response.data.role });
+          // Emitir evento de login exitoso con el tipo de usuario
+          this.$emit('login-success', { 
+            user: response.data.user, 
+            role: response.data.role,
+            user_type: response.data.user_type
+          });
           
           setTimeout(() => {
             this.$emit('cerrar');
@@ -132,12 +145,12 @@ export default {
               errorMessage = 'Error en el servidor';
               break;
             default:
-              errorMessage = error.response.data.message || errorMessage;
+              errorMessage = error.response.data.error || errorMessage;
           }
         }
 
         this.showError(errorMessage);
-      } finally {
+      
         this.loading = false;
       }
     },

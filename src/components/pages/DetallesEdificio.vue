@@ -289,6 +289,7 @@ import axios from '@/utils/axios';
 import eventBus from '@/utils/eventBus';
 import Multiselect from 'vue-multiselect';
 import MyPopUp from '@/components/molecules/MyPopUp.vue';
+import { useAppStore } from '@/store';
 
 export default {
     name: 'DetallesEdificio',
@@ -337,19 +338,17 @@ export default {
                 this.edificio = response.data;
                 this.edificioEditado = { ...response.data };
 
-                // Agregar logs para depuración
-                console.log('Edificio cargado:', this.edificio);
-                console.log('Barrio asociado:', this.edificio.barrio);
-
-                // Si el barrio es solo un ID, puedes hacer una llamada adicional para obtener los detalles
-                if (this.edificio.barrio) {
-                    const barrioResponse = await axios.get(`/crm/barrio/${this.edificio.barrio}/`);
-                    this.edificio.barrio = barrioResponse.data; // Poblamos el objeto barrio
-                    console.log('Detalles del barrio:', this.edificio.barrio);
+                // Asegúrate de que el store esté definido antes de llamar a updateContext
+                if (this.store) {
+                    this.store.updateContext(this.edificio);
+                    console.log('Contexto actualizado con el edificio:', this.edificio);
+                } else {
+                    console.error('El store no está definido.');
                 }
+
+                console.log('Respuesta de la API:', response.data);
             } catch (error) {
                 console.error('Error al cargar edificio:', error);
-                alert('Error al cargar los datos del edificio');
             }
         },
         async cargarBarrios() {
@@ -509,6 +508,11 @@ export default {
             this.popupAmenidadVisible = false;
             this.amenidadSeleccionada = null;
         }
+    },
+    setup() {
+        const store = useAppStore();
+        console.log('Store:', store);
+        return { store };
     }
 }
 </script>

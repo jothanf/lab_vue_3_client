@@ -1,6 +1,6 @@
 <template>
-  <div class="zonas-de-interes-form">
-    <h2>Crear Zona de Interés</h2>
+  <div class="punto-de-interes-form">
+    <h2>Crear Punto de Interés</h2>
     
     <!-- Notificaciones -->
     <div v-if="notification" :class="['alert', `alert-${notification.type}`]">
@@ -29,12 +29,14 @@
           class="form-control"
         >
           <option value="">Seleccione una categoría</option>
-          <option value="parque">Parque</option>
-          <option value="edificio">Bulevar</option>
-          <option value="museo">Museo</option>
           <option value="restaurante">Restaurante</option>
-          <option value="monumento">Monumento</option>
-          <option value="plaza">Plaza</option>
+          <option value="tienda">Tienda</option>
+          <option value="servicio">Servicio</option>
+          <option value="entretenimiento">Entretenimiento</option>
+          <option value="educacion">Educación</option>
+          <option value="salud">Salud</option>
+          <option value="transporte">Transporte</option>
+          <option value="otro">Otro</option>
         </select>
       </div>
 
@@ -100,42 +102,16 @@
         >
       </div>
 
-      <div class="form-group">
-        <label>Puntos de Interés:</label>
-        <multiselect
-          v-model="formData.puntos_de_interes"
-          :options="puntosDeInteres"
-          :multiple="true"
-          :close-on-select="false"
-          :clear-on-select="false"
-          :preserve-search="true"
-          placeholder="Seleccione puntos de interés"
-          label="nombre"
-          track-by="id"
-          :preselect-first="false"
-        >
-          <template v-slot:selection="{ values, isOpen }">
-            <span class="multiselect__single" v-if="values.length && !isOpen">
-              {{ values.length }} punto(s) de interés seleccionado(s)
-            </span>
-          </template>
-        </multiselect>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Guardar Zona de Interés</button>
+      <button type="submit" class="btn btn-primary">Guardar Punto de Interés</button>
     </form>
   </div>
 </template>
 
 <script>
 import axios from '@/utils/axios';
-import Multiselect from 'vue-multiselect';
 
 export default {
-  name: 'ZonasDeInteresForm',
-  components: {
-    Multiselect
-  },
+  name: 'PuntoDeInteresForm',
   data() {
     return {
       formData: {
@@ -147,16 +123,11 @@ export default {
           longitud: null,
           latitud: null,
         },
-        icono: null, // Para el ícono
-        multimedia: [], // Para las imágenes multimedia
-        puntos_de_interes: [] // Nuevo campo
+        icono: null,
+        multimedia: []
       },
-      puntosDeInteres: [], // Lista de puntos de interés disponibles
       notification: null
     }
-  },
-  async created() {
-    await this.cargarPuntosDeInteres();
   },
   methods: {
     showNotification(message, type = 'success') {
@@ -172,79 +143,52 @@ export default {
     handleIconoChange(event) {
       const file = event.target.files[0];
       if (file) {
-        this.formData.icono = file; // Guardar el archivo en formData
+        this.formData.icono = file;
       }
     },
 
     handleMultimediaChange(event) {
-      this.formData.multimedia = Array.from(event.target.files); // Guardar los archivos multimedia
-    },
-
-    async cargarPuntosDeInteres() {
-      try {
-        const response = await axios.get('/crm/puntos-de-interes/');
-        this.puntosDeInteres = response.data;
-      } catch (error) {
-        console.error('Error al cargar puntos de interés:', error);
-        this.showNotification('Error al cargar puntos de interés', 'error');
-      }
+      this.formData.multimedia = Array.from(event.target.files);
     },
 
     async submitForm() {
       try {
-        // Validaciones básicas
         if (!this.formData.nombre || !this.formData.categoria) {
           this.showNotification('Por favor complete los campos obligatorios', 'warning');
           return;
         }
 
-        // Crear un objeto FormData
         const formDataToSend = new FormData();
         formDataToSend.append('nombre', this.formData.nombre);
         formDataToSend.append('categoria', this.formData.categoria);
         formDataToSend.append('descripcion', this.formData.descripcion);
-        formDataToSend.append('direccion', this.formData.direccion || null);
+        formDataToSend.append('direccion', this.formData.direccion || '');
 
-        // Agregar ubicación solo si hay valores
         if (this.formData.ubicacion.longitud || this.formData.ubicacion.latitud) {
           formDataToSend.append('ubicacion', JSON.stringify(this.formData.ubicacion));
         }
 
-        // Agregar ícono si existe
         if (this.formData.icono) {
           formDataToSend.append('icono', this.formData.icono);
         }
 
-        // Agregar los IDs de los puntos de interés seleccionados
-        if (this.formData.puntos_de_interes.length > 0) {
-          const puntosIds = this.formData.puntos_de_interes.map(punto => punto.id);
-          formDataToSend.append('puntos_de_interes', JSON.stringify(puntosIds));
-        }
-
-        // Agregar multimedia si existe
-        for (const archivo of this.formData.multimedia) {
+        this.formData.multimedia.forEach(archivo => {
           formDataToSend.append('multimedia', archivo);
-        }
+        });
 
-        // Enviar datos al backend
-        const response = await axios.post('/crm/zonasDeInteres/', formDataToSend, {
+        const response = await axios.post('/crm/puntos-de-interes/', formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
         
-        console.log('Respuesta del servidor:', response.data);
-        this.showNotification('Zona de interés creada exitosamente');
-        
-        // Limpiar el formulario
+        this.showNotification('Punto de interés creado exitosamente');
         this.resetForm();
-        
-        // Emitir evento para actualizar la lista
-        this.$emit('zona-de-interes-created', response.data);
+        this.$emit('punto-de-interes-created', response.data);
 
       } catch (error) {
-        console.error('Error al crear zona de interés:', error);
-        let errorMessage = 'Error al guardar la zona de interés';
+        console.error('Error al crear punto de interés:', error);
+        let errorMessage = 'Error al guardar el punto de interés';
         
         if (error.response?.data) {
           errorMessage = typeof error.response.data === 'object'
@@ -267,8 +211,7 @@ export default {
           latitud: null,
         },
         icono: null,
-        multimedia: [],
-        puntos_de_interes: []
+        multimedia: []
       };
     }
   }
@@ -276,9 +219,7 @@ export default {
 </script>
 
 <style scoped>
-@import 'vue-multiselect/dist/vue-multiselect.min.css';
-
-.zonas-de-interes-form {
+.punto-de-interes-form {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
@@ -307,9 +248,5 @@ export default {
 
 .btn:hover {
   background-color: #0056b3;
-}
-
-.multiselect {
-  margin-bottom: 1rem;
 }
 </style>

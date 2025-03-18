@@ -56,6 +56,14 @@
           </button>
         </div>
         <div class="buttons-sub-container">
+          <button @click="showPuntoDeInteresForm = true" class="btn btn-primary">
+            Agregar Punto de Interés
+          </button>
+          <button @click="showPuntoDeInteresList = true" class="btn btn-primary">
+            Ver Puntos de Interés
+          </button>
+        </div>
+        <div class="buttons-sub-container">
           <button @click="showZonasDeInteresForm = true" class="btn btn-primary">
             Agregar Zona de Interés
           </button>
@@ -120,6 +128,14 @@
 
       <MyPopUp :visible="showCaracteristicasInterioresList" @cerrar="showCaracteristicasInterioresList = false" titulo="Ver Características Interiores" class="popup-large">
         <CaracteristicasInterioresList @caracteristica-interior-list="handleCaracteristicaInteriorList" />
+      </MyPopUp>
+
+      <MyPopUp :visible="showPuntoDeInteresForm" @cerrar="showPuntoDeInteresForm = false" titulo="Agregar Punto de Interés">
+        <PuntoDeInteresForm @punto-de-interes-created="handlePuntoDeInteresCreated" />
+      </MyPopUp>
+
+      <MyPopUp :visible="showPuntoDeInteresList" @cerrar="showPuntoDeInteresList = false" titulo="Ver Puntos de Interés" class="popup-large">
+        <PuntoDeInteresList @punto-de-interes-list="handlePuntoDeInteresList" />
       </MyPopUp>
 
       <MyPopUp :visible="showZonasDeInteresForm" @cerrar="showZonasDeInteresForm = false" titulo="Agregar Zona de Interés">
@@ -208,6 +224,8 @@ import AmenidadesForm from '@/components/organisms/adminForms/AmenidadesForm.vue
 import AmenidadesList from '@/components/organisms/adminForms/AmenidadesList.vue';
 import CaracteristicasInterioresForm from '@/components/organisms/adminForms/CaracteristicasInterioresForm.vue';
 import CaracteristicasInterioresList from '@/components/organisms/adminForms/CaracteristicasInterioresList.vue';
+import PuntoDeInteresForm from '@/components/organisms/adminForms/PuntoDeInteresForm.vue';
+import PuntoDeInteresList from '@/components/organisms/adminForms/PuntoDeInteresList.vue';
 import ZonasDeInteresForm from '@/components/organisms/adminForms/ZonasDeInteresForm.vue';
 import ZonasDeInteresList from '@/components/organisms/adminForms/ZonasDeInteresList.vue';
 import LocalidadesForm from '@/components/organisms/adminForms/LocalidadesForm.vue';
@@ -232,6 +250,8 @@ const showAmenidadesForm = ref(false);
 const showAmenidadesList = ref(false);
 const showCaracteristicasInterioresForm = ref(false);
 const showCaracteristicasInterioresList = ref(false);
+const showPuntoDeInteresForm = ref(false);
+const showPuntoDeInteresList = ref(false);
 const showZonasDeInteresForm = ref(false);
 const showZonasDeInteresList = ref(false);
 const showLocalidadesForm = ref(false);
@@ -270,6 +290,16 @@ function handleCaracteristicaInteriorCreated(caracteristica) {
 function handleCaracteristicaInteriorList(caracteristicaList) {
     console.log('Característica interior creada:', caracteristicaList);
     showCaracteristicasInterioresList.value = false; 
+}
+
+function handlePuntoDeInteresCreated(puntoDeInteres) {
+    console.log('Punto de interés creado:', puntoDeInteres);
+    showPuntoDeInteresForm.value = false; 
+}
+
+function handlePuntoDeInteresList(puntoDeInteresList) {
+    console.log('Punto de interés creado:', puntoDeInteresList);
+    showPuntoDeInteresList.value = false; 
 }
 
 function handleZonaDeInteresCreated(zonaDeInteres) {
@@ -321,6 +351,7 @@ function handleEdificiosList(edificioList) {
     console.log('Edificio creado:', edificioList);
     showEdificiosList.value = false; 
 }
+
 function handleClienteCreated(cliente) {
     console.log('Cliente creado:', cliente);
     showClientesForm.value = false; 

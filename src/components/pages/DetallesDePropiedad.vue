@@ -277,6 +277,21 @@
         </multiselect>
       </div>
     </div>
+
+    <button @click="abrirChat" class="btn btn-info">
+      <i class="fas fa-comments"></i> Abrir Chat IA
+    </button>
+
+    <my-pop-up 
+      :visible="popupVisible" 
+      @cerrar="popupVisible = false"
+      titulo="Chat con IA"
+    >
+      <chat-i-a 
+        :context="formatearContextoCompleto"
+        role="realEstate"
+      />
+    </my-pop-up>
   </div>
 </template>
 
@@ -444,11 +459,15 @@
 <script>
 import axios from '@/utils/axios';
 import Multiselect from 'vue-multiselect';
+import ChatIA from '@/components/molecules/ChatIA.vue';
+import MyPopUp from '@/components/molecules/MyPopUp.vue';
 
 export default {
   name: 'DetallesDePropiedad',
   components: {
     Multiselect,
+    ChatIA,
+    MyPopUp,
   },
   data() {
     return {
@@ -468,6 +487,7 @@ export default {
         descripcion: ''
       },
       generandoDescripcion: false,
+      popupVisible: false,
     }
   },
   watch: {
@@ -503,6 +523,78 @@ export default {
       this.propiedad.multimedia.forEach(media => {
         console.log("URL de imagen:", media.archivo_url);
       });
+    }
+  },
+  computed: {
+    formatearContextoCompleto() {
+      if (!this.propiedad) return {};
+
+      return {
+        propiedad: {
+          basico: {
+            codigo: this.propiedad.codigo,
+            titulo: this.propiedad.titulo,
+            tipo_propiedad: this.propiedad.tipo_propiedad,
+            descripcion: this.propiedad.descripcion,
+          },
+          precios: {
+            venta: this.propiedad.modalidad_de_negocio?.venta_tradicional?.precio,
+            renta: this.propiedad.modalidad_de_negocio?.renta_tradicional?.precio,
+            administracion: this.propiedad.valor_administracion,
+            predial: this.propiedad.valor_predial
+          },
+          caracteristicas: {
+            area_construida: this.propiedad.metro_cuadrado_construido,
+            area_total: this.propiedad.metro_cuadrado_propiedad,
+            habitaciones: this.propiedad.habitaciones,
+            banos: this.propiedad.banos,
+            nivel: this.propiedad.nivel,
+            estrato: this.propiedad.estrato,
+            ano_construccion: this.propiedad.ano_construccion,
+            mascotas: this.propiedad.mascotas,
+            garajes: this.propiedad.garajes,
+            depositos: this.propiedad.depositos,
+            balcon: this.propiedad.balcon,
+            terraza: this.propiedad.terraza
+          },
+          ubicacion: {
+            direccion: this.propiedad.direccion?.direccion,
+            edificio: this.propiedad.edificio && {
+              nombre: this.propiedad.edificio.nombre,
+              tipo: this.propiedad.edificio.tipo_edificio,
+              descripcion: this.propiedad.edificio.descripcion,
+              servicios: this.propiedad.edificio.servicios_adicionales,
+              estado: this.propiedad.edificio.estado,
+              torres: this.propiedad.edificio.torres,
+              parqueaderos: this.propiedad.edificio.parqueaderos,
+              ano_construccion: this.propiedad.edificio.ano_construccion
+            },
+            barrio: this.propiedad.edificio?.barrio && {
+              nombre: this.propiedad.edificio.barrio.nombre,
+              tipo: this.propiedad.edificio.barrio.tipo_barrio,
+              estrato: this.propiedad.edificio.barrio.estrato_predominante,
+              descripcion: this.propiedad.edificio.barrio.descripcion
+            }
+          },
+          amenidades: this.propiedad.amenidades?.map(a => ({
+            nombre: a.nombre,
+            categoria: a.categoria,
+            descripcion: a.descripcion
+          })),
+          zonas_interes: this.propiedad.edificio?.zonas_de_interes?.map(z => ({
+            nombre: z.nombre,
+            categoria: z.categoria,
+            descripcion: z.descripcion,
+            puntos_interes: z.puntos_de_interes?.map(p => ({
+              nombre: p.nombre,
+              categoria: p.categoria,
+              descripcion: p.descripcion,
+              direccion: p.direccion
+            }))
+          }))
+        },
+        tipo_interaccion: this.determinarTipoInteraccion()
+      };
     }
   },
   methods: {
@@ -738,6 +830,20 @@ export default {
       } finally {
         this.generandoDescripcion = false;
       }
+    },
+    abrirChat() {
+      this.popupVisible = true;
+    },
+    determinarTipoInteraccion() {
+      const modalidad = this.propiedad.modalidad_de_negocio;
+      if (modalidad?.venta_tradicional?.activo && modalidad?.renta_tradicional?.activo) {
+        return 'venta_y_renta';
+      } else if (modalidad?.venta_tradicional?.activo) {
+        return 'venta';
+      } else if (modalidad?.renta_tradicional?.activo) {
+        return 'renta';
+      }
+      return 'informacion_general';
     }
   }
 }
