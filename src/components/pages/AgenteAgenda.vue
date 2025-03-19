@@ -36,10 +36,39 @@ export default {
   data() {
     return {
       userInput: '',
-      messages: []
+      messages: [],
+      clienteId: null
     };
   },
+  created() {
+    // Obtener el cliente_id al crear el componente
+    this.clienteId = localStorage.getItem('cliente_id');
+    console.log('Cliente ID obtenido:', this.clienteId);
+    
+    // Inicializar el chat
+    this.initializeChat();
+  },
   methods: {
+    async initializeChat() {
+      try {
+        const response = await fetch('http://localhost:8000/crm/agendaAgent/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+          },
+          body: JSON.stringify({
+            action: 'iniciar',
+            cliente_id: parseInt(this.clienteId) // Convertir a número
+          })
+        });
+
+        const data = await response.json();
+        this.messages.push({ from: 'agent', text: data.mensaje });
+      } catch (error) {
+        console.error('Error al inicializar el chat:', error);
+      }
+    },
     async sendMessage() {
       if (!this.userInput.trim()) return;
 
@@ -51,11 +80,13 @@ export default {
         const response = await fetch('http://localhost:8000/crm/agendaAgent/', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           },
           body: JSON.stringify({
             action: 'mensaje',
-            mensaje: userMessage
+            mensaje: userMessage,
+            cliente_id: parseInt(this.clienteId) // Convertir a número
           })
         });
 
