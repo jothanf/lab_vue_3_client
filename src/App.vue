@@ -3,6 +3,9 @@
     <MyTitle @click="navigateTo('/')">NORA</MyTitle>
     <div>
       <button @click="navigateTo('/requerimiento-agent')" class="btn btn-primary"> <i class="fas fa-paper-plane"></i> Requerimiento con Agente IA</button>
+      <button @click="navigateTo('/propiedad-agent')" class="btn btn-primary"> <i class="fas fa-paper-plane"></i> Propiedad con Agente IA</button>
+      <button @click="navigateTo('/agenda-abierta')" class="btn btn-primary"> <i class="fas fa-paper-plane"></i> Agenda Abierta</button>
+      <button @click="navigateTo('/agente-agenda')" class="btn btn-primary"> <i class="fas fa-paper-plane"></i> Agenda IA</button>
     </div>
 
     

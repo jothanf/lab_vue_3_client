@@ -16,6 +16,9 @@ import { useAppStore } from '@/store'
 import ClienteHome from '@/components/pages/ClienteHome.vue'
 import CalendarioCliente from '@/components/pages/CalendarioCliente.vue'
 import RequerimientoAgent from '@/components/pages/RequerimientoAgent.vue'
+import PropiedadAgent from '@/components/pages/PropiedadAgent.vue'
+import AgendaAbierta from '@/components/pages/AgendaAbierta.vue'
+import AgenteAgenda from '@/components/pages/AgenteAgenda.vue'
 const routes = [
   { path: '/admin-home', component: AdminHome },
   { path: '/cliente-home', component: ClienteHome },
@@ -34,6 +37,9 @@ const routes = [
   { path: '/detalles-de-propiedad/:id', component: DetallesPropiedad },
   { path: '/calendario-cliente', component: CalendarioCliente },
   { path: '/requerimiento-agent', component: RequerimientoAgent },
+  { path: '/propiedad-agent', component: PropiedadAgent },
+  { path: '/agenda-abierta', component: AgendaAbierta },
+  { path: '/agente-agenda', component: AgenteAgenda },
 ]
 
 const router = createRouter({

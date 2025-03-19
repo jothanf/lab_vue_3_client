@@ -42,6 +42,17 @@
           </div>
         </div>
       </div>
+
+      <!-- Mostrar agendas abiertas -->
+      <h3>Agendas Abiertas</h3>
+      <div v-if="agendas.length === 0" class="mensaje-error">No hay agendas abiertas disponibles.</div>
+      <div v-else>
+        <ul>
+          <li v-for="agenda in agendas" :key="agenda.id">
+            {{ agenda.fecha }} a las {{ agenda.hora }} - Agente ID: {{ agenda.agente }}
+          </li>
+        </ul>
+      </div>
     </template>
     
     <!-- Modal para el formulario de agenda -->
@@ -286,7 +297,7 @@ export default {
       try {
         // Usar la URL correcta sin el prefijo /api/
         console.log(`Cargando agendas para cliente ID: ${this.clienteId}`);
-        const response = await axios.get(`/crm/agenda/?cliente=${this.clienteId}`);
+        const response = await axios.get('/crm/agendaAbierta/');
         console.log('Agendas cargadas:', response.data);
         this.agendas = response.data;
       } catch (error) {
